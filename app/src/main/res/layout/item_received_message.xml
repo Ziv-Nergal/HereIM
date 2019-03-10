@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/bg_received_message"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/received_msg_cell_photo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/img_blank_profile"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/received_msg_cell_name"
+        android:text="@string/full_name_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toEndOf="@id/received_msg_cell_photo"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/received_msg_cell_body"
+        android:text="@string/enter_a_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="250dp"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toEndOf="@id/received_msg_cell_photo"
+        app:layout_constraintTop_toBottomOf="@id/received_msg_cell_name"
+        android:layout_marginStart="8dp" />
+
+    <TextView
+        android:id="@+id/received_msg_cell_time"
+        android:text="00:00"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/received_msg_cell_body"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="HardcodedText" />
+
+</android.support.constraint.ConstraintLayout>

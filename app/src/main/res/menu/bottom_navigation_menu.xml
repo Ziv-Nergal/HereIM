@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_group_chats"
+        android:icon="@drawable/ic_bottom_nav_group_chats"
+        android:title="@string/title_group_chats" />
+
+    <item
+        android:id="@+id/navigation_my_profile"
+        android:icon="@drawable/ic_bottom_nav_my_profile"
+        android:title="@string/title_my_profile" />
+
+    <item
+        android:id="@+id/navigation_group_requests"
+        android:icon="@drawable/ic_bottom_nav_notifications"
+        android:title="@string/title_group_requests" />
+
+    <item
+        android:id="@+id/navigation_search_groups"
+        android:icon="@drawable/ic_bottom_nav_search_groups"
+        android:title="@string/title_search_groups" />
+
+</menu>

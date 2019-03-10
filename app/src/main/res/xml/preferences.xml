@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/user_info">
+
+        <EditTextPreference
+            android:key="pref_info_email"
+            android:title="Email"
+            android:summary="@string/email_address_hint"
+            android:enabled="false"/>
+
+        <EditTextPreference
+            android:key="pref_info_full_name"
+            android:title="Full Name"
+            android:inputType="textCapWords"
+            android:summary="@string/full_name_hint" />
+
+        <EditTextPreference
+            android:key="pref_info_status"
+            android:title="Status"
+            android:maxLength="20"
+            android:summary="@string/default_status" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Notifications">
+
+        <SwitchPreference
+            android:title="Sound"
+            android:key="pref_notification_sound"
+            android:defaultValue="true"
+            android:summary="@string/pref_notification_sound"
+            android:icon="@drawable/ic_volume_on_24dp"/>
+
+        <SwitchPreference
+            android:title="Vibrate"
+            android:key="pref_notification_vibrate"
+            android:defaultValue="true"
+            android:summary="@string/pref_notification_vibrate"
+            android:icon="@drawable/ic_vibration_24dp"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/looks">
+
+        <com.austingreco.imagelistpreference.ImageListPreference
+            android:title="@string/chat_background"
+            android:summary="@string/chat_background_summary"
+            android:key="pref_looks_chat_background"
+            android:icon="@drawable/ic_wallpaper_24dp"
+            app:ilp_entryImages="@array/pref_wallpaper_items"
+            app:ilp_useCard="true"
+            app:ilp_backgroundTint="@color/transparent"
+            app:ilp_tint="@color/transparent"
+            android:entries="@array/preference_wallpapers_labels"
+            android:entryValues="@array/pref_wallpaper_values" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

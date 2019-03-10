@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="?android:selectableItemBackground">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/user_cell_photo"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:src="@drawable/img_blank_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/user_cell_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/full_name_hint"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/user_cell_photo"
+        app:layout_constraintTop_toTopOf="@id/user_cell_photo"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:id="@+id/user_cell_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_status"
+        android:maxLines="1"
+        app:layout_constraintStart_toEndOf="@id/user_cell_photo"
+        app:layout_constraintBottom_toBottomOf="@+id/user_cell_photo"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="2dp"/>
+
+    <TextView
+        android:id="@+id/user_cell_is_admin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Group admin"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@color/green"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/user_cell_name"
+        android:layout_marginEnd="12dp"
+        tools:ignore="HardcodedText"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:id="@+id/user_cell_online_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/online"
+        android:textColor="@color/green"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/user_cell_status"
+        android:layout_marginEnd="12dp" />
+
+</android.support.constraint.ConstraintLayout>

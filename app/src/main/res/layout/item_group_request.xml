@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/group_request_cell_sender_photo"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/img_blank_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/group_request_cell_sender_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="@string/full_name_hint"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="@color/black"
+        android:ellipsize="end"
+        android:maxWidth="160dp"
+        android:maxLines="1"
+        app:layout_constraintStart_toEndOf="@id/group_request_cell_sender_photo"
+        app:layout_constraintTop_toTopOf="@+id/group_request_cell_sender_photo"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:drawableStart="@drawable/ic_arrow_downward_24dp"
+        android:text="@string/wants_to_join"
+        android:textSize="12sp"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="@id/group_request_cell_sender_name"
+        app:layout_constraintTop_toBottomOf="@id/group_request_cell_sender_name"
+        android:drawablePadding="8dp"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/group_request_cell_group_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/ic_group_24dp"
+        android:gravity="center"
+        android:text="@string/group_name"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:maxWidth="150dp"
+        android:drawablePadding="8dp"
+        android:textSize="14sp"
+        android:layout_marginStart="12dp"
+        app:layout_constraintBottom_toBottomOf="@id/group_request_cell_sender_photo"
+        app:layout_constraintStart_toEndOf="@id/group_request_cell_sender_photo"
+        android:textColor="@color/black"/>
+
+    <ImageButton
+        android:id="@+id/group_request_cell_accept_btn"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:srcCompat="@drawable/ic_check_24dp"
+        android:background="@drawable/btn_accept_group_request"
+        android:text="@string/create_group"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:onClick="CreateGroupBtnClick"
+        android:importantForAccessibility="no"/>
+
+    <ImageButton
+        android:id="@+id/group_request_cell_deny_btn"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/btn_deny_group_request"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/group_request_cell_accept_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_deny_24dp"
+        tools:ignore="ContentDescription" />
+
+</android.support.constraint.ConstraintLayout>

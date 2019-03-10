@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="fragments.GroupChatsFragment">
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/group_chats_fragment_create_new_group_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:backgroundTint="@color/colorPrimary"
+        android:layout_alignParentBottom="true"
+        app:maxImageSize="28dp"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="25dp"
+        app:srcCompat="@drawable/ic_group_add_24dp"
+        android:layout_above="@+id/group_chat_recycler_view" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/group_chat_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        app:reverseLayout="true"
+        app:stackFromEnd="true"/>
+
+    <FrameLayout
+        android:id="@+id/display_group_photo_fragment_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
+
+    <TextView
+        android:id="@+id/group_chats_fragment_no_chats_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="@string/no_group_chats"
+        android:textSize="20sp"
+        android:visibility="invisible"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"/>
+
+</RelativeLayout>

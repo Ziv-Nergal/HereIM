@@ -1,0 +1,120 @@
+<resources>
+    <string name="app_name">HereiM</string>
+    <string name="full_name_hint">Full Name</string>
+    <string name="password_hint">Password</string>
+    <string name="log_in">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="forgot_your_password"><u>Forgot your Password?</u></string>
+    <string name="email_required">Email address required!</string>
+    <string name="password_required">Password required!</string>
+    <string name="email_address_hint">Email Address</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="already_have_an_account">already have an account?</string>
+    <string name="login_sign_up_trans">login sign up trans</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_group_chats">Group Chats</string>
+    <string name="title_my_profile">My Profile</string>
+    <string name="title_group_requests">Group Requests</string>
+    <string name="title_search_groups">Search Groups</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="change_photo">Change Photo</string>
+    <string name="default_status">Busy…</string>
+    <string name="settings">Settings</string>
+    <string name="log_out">Log Out</string>
+    <string name="log_out_msg">Are you sure you want to log out?</string>
+    <string name="dialog_positive_btn">OK</string>
+    <string name="dialog_negative_btn">Cancel</string>
+    <string name="group_name">Group Name</string>
+    <string name="last_message">Last Message</string>
+    <string name="group_name_empty">Enter group\'s name!</string>
+    <string name="created_the_group">created the group</string>
+    <string name="enter_a_message">Enter a message</string>
+    <string name="tap_to_see_group_details">Tap to see group details</string>
+    <string name="create_group_instructions">Choose your group name, you can also add a group photo!</string>
+    <string name="participants_count">Participants count:</string>
+    <string name="leave_group">Leave Group</string>
+    <string name="group_info_transition">group_info_transition</string>
+    <string name="leave_group_dialog_msg">Are you sure you want to leave this group?</string>
+    <string name="delete_group">Delete group</string>
+    <string name="delete_group_dialog_msg">Are you sure you want to delete group?</string>
+    <string name="group_id">Group\'s Id:</string>
+    <string name="only_admin_can_see_this">Only the admin can see this</string>
+    <string name="search_groups_instructions">Enter the group\'s id that you want to join to</string>
+    <string name="request_to_join_group">Ask admin to join group</string>
+    <string name="group_not_found">Group not found!</string>
+    <string name="create_group">Create Group</string>
+    <string name="group_created_seccussfully">Group created successfully</string>
+    <string name="create_group_trans_name">create_group_transition_name</string>
+    <string name="group_id_instructions_long">Share the group\'s id with people that you want in your group chat.\nThey will be able to use it to search your group and send you a group request.</string>
+    <string name="group_id_instructions_short">Share the group\'s id with people that you want in your group chat</string>
+    <string name="group_id_share_message">\n\nHereiM App\n\nUse this id to search and join my group!</string>
+    <string name="no_group_requests">No group requests</string>
+    <string name="no_group_chats">No group chats</string>
+    <string name="is_typing">is typing...</string>
+    <string name="online">online</string>
+    <string name="offline">offline</string>
+    <string name="wants_to_join">wants to join</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_full_name">Full name</string>
+
+    <!-- Example settings for Notifications -->
+    <string name="pref_header_notifications">Notifications</string>
+
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+
+    <string name="pref_title_vibrate">Vibrate</string>
+    <string name="user_info">User Info</string>
+    <string name="pref_notification_vibrate">Enable/Disable message vibration</string>
+    <string name="pref_notification_sound">Enable/Disable message sound</string>
+    <string name="looks">Looks</string>
+    <string name="chat_background">Chat Background</string>
+    <string name="chat_background_summary">Select your favorite chat background</string>
+
+    <string-array name="preference_wallpapers_labels">
+
+        <item>default</item>
+        <item>Cool Green</item>
+        <item>Jazz Pink</item>
+        <item>Funky Gray</item>
+        <item>Ocean Blue</item>
+        <item>Colored Sky</item>
+        <item>Garfield Orange</item>
+        <item>Sweet Caramel</item>
+
+    </string-array>
+
+    <integer-array name="pref_wallpaper_items">
+
+        <item>@drawable/bg_chat_default_wallpaper</item>
+        <item>@drawable/wallpaper_1_small</item>
+        <item>@drawable/wallpaper_2_small</item>
+        <item>@drawable/wallpaper_3_small</item>
+        <item>@drawable/wallpaper_4_small</item>
+        <item>@drawable/wallpaper_5_small</item>
+        <item>@drawable/wallpaper_6_small</item>
+        <item>@drawable/wallpaper_7_small</item>
+
+    </integer-array>
+
+    <array name="pref_wallpaper_values">
+
+        <item>@drawable/bg_chat_default_wallpaper</item>
+        <item>@drawable/wallpaper_1</item>
+        <item>@drawable/wallpaper_2</item>
+        <item>@drawable/wallpaper_3</item>
+        <item>@drawable/wallpaper_4</item>
+        <item>@drawable/wallpaper_5</item>
+        <item>@drawable/wallpaper_6</item>
+        <item>@drawable/wallpaper_7</item>
+
+    </array>
+
+</resources>

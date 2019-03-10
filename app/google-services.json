@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "998685453528",
+    "firebase_url": "https://hereim-ab5cb.firebaseio.com",
+    "project_id": "hereim-ab5cb",
+    "storage_bucket": "hereim-ab5cb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:998685453528:android:56288fbe8f22807c",
+        "android_client_info": {
+          "package_name": "gis.hereim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "998685453528-upu4575ob2ch23gkkkkortkcvoi3m1i3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "gis.hereim",
+            "certificate_hash": "7ab40af2302ae92f7d1f2cf1ad7931c9248395e5"
+          }
+        },
+        {
+          "client_id": "998685453528-majpu4b4j7gav0867v8hfhdrvt1pr4lr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_cxKYBXzgZsoV5z7CfZn0yxrcpSHv3_U"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "998685453528-majpu4b4j7gav0867v8hfhdrvt1pr4lr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
