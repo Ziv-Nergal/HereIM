@@ -49,7 +49,7 @@ public class FirebaseUser {
         initUser();
     }
 
-    public static FirebaseUser GetInstance() {
+    public static FirebaseUser getInstance() {
         if (sInstance == null) {
             sInstance = new FirebaseUser();
         } else {
@@ -85,19 +85,19 @@ public class FirebaseUser {
         }
     }
 
-    DatabaseReference CurrentUserDbRef() {
+    DatabaseReference currentUserDbRef() {
         return mCurrentUserDbRef;
     }
 
-    public DatabaseReference CurrentUserGroupsDbRef() {
+    public DatabaseReference currentUserGroupsDbRef() {
         return mCurrentUserGroupsDbRef;
     }
 
-    public DatabaseReference MessageNotificationsDbRef() {
+    public DatabaseReference messageNotificationsDbRef() {
         return mMessageNotificationsDbRef;
     }
 
-    public DatabaseReference GroupRequestNotificationsDbRef() {
+    public DatabaseReference groupRequestNotificationsDbRef() {
         return mGroupRequestsDbRef;
     }
 
@@ -112,7 +112,7 @@ public class FirebaseUser {
         });
     }
 
-    public void UpdatePhoto(Uri iUserPhotoUri) {
+    public void updatePhoto(Uri iUserPhotoUri) {
         mUserPhotoUri = iUserPhotoUri;
         mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder().setPhotoUri(iUserPhotoUri).build());
         uploadUserPhoto(iUserPhotoUri);
@@ -142,44 +142,44 @@ public class FirebaseUser {
         });
     }
 
-    String GetUserPhotoUrl() {
+    String getUserPhotoUrl() {
         return mUserPhotoUrl;
     }
 
-    public Uri GetUserPhotoUri() {
+    public Uri getUserPhotoUri() {
         return mUserPhotoUri;
     }
 
-    public String GetUid() {
+    public String getUid() {
         return mUid;
     }
 
-    public String GetFullName() {
+    public String getFullName() {
         return mFullName;
     }
 
-    public void SetFullName(String fullName) {
+    public void setFullName(String fullName) {
         this.mFullName = fullName;
         mCurrentUserDbRef.child("fullName").setValue(fullName);
     }
 
-    public String GetEmailAddress() {
+    public String getEmailAddress() {
         return mEmailAddress;
     }
 
-    String GetUserColor() {
+    String getUserColor() {
         return mUserColor;
     }
 
-    String GetDeviceToken() {
+    String getDeviceToken() {
         return mDeviceToken;
     }
 
-    public String GetUserStatus() {
+    public String getUserStatus() {
         return mUserStatus;
     }
 
-    public void SetUserStatus(String userStatus) {
+    public void setUserStatus(String userStatus) {
         this.mUserStatus = userStatus;
         mCurrentUserDbRef.child("status").setValue(userStatus);
     }
@@ -196,7 +196,7 @@ public class FirebaseUser {
         });
     }
 
-    GroupUser GetFirebaseClassInstance(){
+    GroupUser getFirebaseClassInstance(){
 
         GroupUser me = new GroupUser();
 
@@ -211,21 +211,21 @@ public class FirebaseUser {
         return me;
     }
 
-    public boolean IsOnline() {
+    public boolean isOnline() {
         return mIsOnline;
     }
 
-    public void SetIsOnline(boolean iIsOnline) {
+    public void setIsOnline(boolean iIsOnline) {
         mIsOnline = iIsOnline;
         mCurrentUserDbRef.child("online").setValue(iIsOnline);
     }
 
-    public boolean IsLoggedIn(){
+    public boolean isLoggedIn(){
         return mFirebaseUser != null;
     }
 
-    public void Logout(){
-        SetIsOnline(false);
+    public void logout(){
+        setIsOnline(false);
         sInstance = null;
         mAuth.signOut();
     }

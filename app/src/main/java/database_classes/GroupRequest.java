@@ -1,5 +1,9 @@
 package database_classes;
 
+/*
+This class is a firebase adapted class so variable names are matching those in firebase database.
+*/
+
 public class GroupRequest {
 
     private String deviceToken;

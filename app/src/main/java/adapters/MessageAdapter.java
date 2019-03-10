@@ -34,7 +34,7 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
     public int getItemViewType(int position) {
         Message mCurrentMsg = getItem(position);
         // Determines whether the message is a sent or a received message
-        return mCurrentMsg.getSenderId().equals(sCurrentFirebaseUser.GetUid()) ? VIEW_TYPE_MESSAGE_SENT : VIEW_TYPE_MESSAGE_RECEIVED;
+        return mCurrentMsg.getSenderId().equals(sCurrentFirebaseUser.getUid()) ? VIEW_TYPE_MESSAGE_SENT : VIEW_TYPE_MESSAGE_RECEIVED;
 
     }
 
@@ -62,7 +62,7 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
 
     @Override
     protected void onBindViewHolder(@NonNull BaseViewHolder<Message> holder, int position, @NonNull Message message) {
-        holder.BindView(message);
+        holder.bindView(message);
     }
 
     private class ReceivedMessageHolder extends BaseViewHolder<Message> {
@@ -81,7 +81,7 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
         }
 
         @Override
-        void BindView(final Message iMessage) {
+        void bindView(final Message iMessage) {
 
             mMsgText.setText(iMessage.getMsgText());
             mMsgTime.setText(TimeStampParser.AccurateParse(iMessage.getTimeStamp()));
@@ -113,7 +113,7 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
         }
 
         @Override
-        void BindView(Message iMessage) {
+        void bindView(Message iMessage) {
             mMsgText.setText(iMessage.getMsgText());
             mMsgTime.setText(TimeStampParser.AccurateParse(iMessage.getTimeStamp()));
         }

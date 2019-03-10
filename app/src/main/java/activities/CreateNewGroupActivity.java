@@ -55,7 +55,7 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if(sCurrentFirebaseUser.IsLoggedIn()){
+        if(sCurrentFirebaseUser.isLoggedIn()){
             setActivityUI();
         }else{
             goToLoginPage();
@@ -96,7 +96,7 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
         }
     }
 
-    public void AddGroupPhotoBtnClick(View view) {
+    public void addGroupPhotoBtnClick(View view) {
         CropImage.activity()
                 .setGuidelines(CropImageView.Guidelines.ON)
                 .setCropShape(CropImageView.CropShape.OVAL)
@@ -128,7 +128,7 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
         }
     }
 
-    public void CreateGroupBtnClick(View view) {
+    public void createGroupBtnClick(View view) {
 
         final FABProgressCircle fabProgressCircle = (FABProgressCircle) view;
 
@@ -147,7 +147,7 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
 
         fabProgressCircle.show();
 
-        sDatabaseManager.CreateNewGroup(groupName, mGroupPhotoUri, new DatabaseManager.OnGroupCreatedListener() {
+        sDatabaseManager.createNewGroup(groupName, mGroupPhotoUri, new DatabaseManager.OnGroupCreatedListener() {
             @Override
             public void onCreated(String groupId) {
                 mCreatedGroupId = groupId;
@@ -171,7 +171,7 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
         }, 600);
     }
 
-    public void ShareGroupIdClickBtn(View view) {
+    public void shareGroupIdClickBtn(View view) {
         String idMessage = mCreatedGroupId + getString(R.string.group_id_share_message);
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");

@@ -25,7 +25,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import database_classes.GroupUser;
 import gis.hereim.R;
 
-import static activities.MainActivity.sCurrentFirebaseUser;
 import static activities.MainActivity.sDatabaseManager;
 
 public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseViewHolder<GroupUser>> {
@@ -40,7 +39,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
     private GroupChat mGroupChat;
 
-    private GroupUserAdapter.OnUserClickListener mUserClickListener;
+    /*private GroupUserAdapter.OnUserClickListener mUserClickListener;
 
     public interface OnUserClickListener {
         void onUserClick(View view, GroupUser user, CircleImageView userPhoto, TextView userName);
@@ -48,7 +47,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
     public void setUserClickListener(OnUserClickListener mUserClickListener) {
         this.mUserClickListener = mUserClickListener;
-    }
+    }*/
 
     public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options, GroupChat groupChat) {
         super(options);
@@ -77,7 +76,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
                 GroupUser currentUser = dataSnapshot.getValue(GroupUser.class);
 
                 if(currentUser != null){
-                    viewHolder.BindView(currentUser);
+                    viewHolder.bindView(currentUser);
                 }
             }
 
@@ -87,13 +86,13 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
         viewHolder.setViewHolderId(user.getUid());
         mValueEventListenerMap.put(user.getUid(), groupUserValueEventListener);
-        sDatabaseManager.UsersDbRef().child(user.getUid()).addValueEventListener(groupUserValueEventListener);
+        sDatabaseManager.usersDbRef().child(user.getUid()).addValueEventListener(groupUserValueEventListener);
     }
 
     @Override
     public void onViewDetachedFromWindow(@NonNull BaseViewHolder<GroupUser> holder) {
         super.onViewDetachedFromWindow(holder);
-        sDatabaseManager.UsersDbRef().child(holder.getViewHolderId()).removeEventListener(Objects.requireNonNull(mValueEventListenerMap.get(holder.getViewHolderId())));
+        sDatabaseManager.usersDbRef().child(holder.getViewHolderId()).removeEventListener(Objects.requireNonNull(mValueEventListenerMap.get(holder.getViewHolderId())));
     }
 
     private class UserViewHolder extends BaseViewHolder<GroupUser> {
@@ -114,7 +113,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         }
 
         @Override
-        void BindView(final GroupUser groupUser) {
+        void bindView(final GroupUser groupUser) {
 
             mUserName.setText(groupUser.getFullName());
             mUserStatus.setText(groupUser.getStatus());

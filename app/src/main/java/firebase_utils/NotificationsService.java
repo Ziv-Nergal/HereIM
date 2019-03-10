@@ -34,8 +34,8 @@ public class NotificationsService extends FirebaseMessagingService {
 
                 if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("pref_notification_sound", true)) {
                     switch (notificationType){
-                        case MSG_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.MESSAGE_FX, getApplicationContext()); break;
-                        case GROUP_REQUEST_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.GROUP_REQUEST_FX, getApplicationContext());
+                        case MSG_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.MESSAGE_FX); break;
+                        case GROUP_REQUEST_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.GROUP_REQUEST_FX); break;
                     }
                 }
             }

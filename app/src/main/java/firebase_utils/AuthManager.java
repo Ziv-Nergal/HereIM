@@ -8,11 +8,11 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 
 public class AuthManager {
 
-    public static void ValidateInputsNotEmpty(EditText[] iInputs) throws Exception{
+    public static void ValidateInputsNotEmpty(EditText[] inputs) throws Exception{
 
         boolean allInputsOk = true;
 
-        for (EditText input : iInputs) {
+        for (EditText input : inputs) {
             if(input.getText().toString().trim().isEmpty()){
                 input.setError(input.getTag() == null ? "Input Required" : input.getTag().toString() + " Required");
                 allInputsOk = false;

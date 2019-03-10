@@ -16,9 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyalbira.loadingdots.LoadingDots;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 import com.podcopic.animationlib.library.AnimationType;
 import com.podcopic.animationlib.library.StartSmartAnimation;
 import com.squareup.picasso.Picasso;
@@ -99,7 +96,7 @@ public class SearchGroupsFragment extends Fragment implements SearchView.OnQuery
 
         mLoadingDotsAnimation.setVisibility(View.VISIBLE);
 
-        sDatabaseManager.SearchGroupById(query.trim(), new DatabaseManager.GroupSearchCallback() {
+        sDatabaseManager.searchGroupById(query.trim(), new DatabaseManager.GroupSearchCallback() {
             @Override
             public void groupFound(GroupChat groupChat) {
                 displayGroup(groupChat);
@@ -145,12 +142,12 @@ public class SearchGroupsFragment extends Fragment implements SearchView.OnQuery
 
                 Map<String, Object> groupUsers = groupChat.getGroupUsers();
 
-                if (groupUsers.containsKey(sCurrentFirebaseUser.GetUid())) {
+                if (groupUsers.containsKey(sCurrentFirebaseUser.getUid())) {
                     Toast.makeText(mContext, "You are already a member in this group!", Toast.LENGTH_SHORT).show();
                 } else if(!groupUsers.containsKey(groupChat.getAdminId())) {
                     Toast.makeText(mContext, "No admin for this group so no body can join it!", Toast.LENGTH_SHORT).show();
                 } else {
-                    sDatabaseManager.SendGroupRequest(groupChat);
+                    sDatabaseManager.sendGroupRequest(groupChat);
                     Toast.makeText(mContext, "Request sent!", Toast.LENGTH_SHORT).show();
                 }
             }

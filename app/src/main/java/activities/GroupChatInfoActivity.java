@@ -41,7 +41,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_group_chat_info);
 
-        if(sCurrentFirebaseUser.IsLoggedIn()){
+        if(sCurrentFirebaseUser.isLoggedIn()){
             setActivityUI();
         }else{
             goToLoginPage();
@@ -74,7 +74,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
 
         mUsersCounterTextView.setText(String.valueOf(mCurrentGroup.getGroupUsers().size()));
 
-        if(mCurrentGroup.getAdminId().equals(sCurrentFirebaseUser.GetUid())){
+        if(mCurrentGroup.getAdminId().equals(sCurrentFirebaseUser.getUid())){
             mGroupIdTextView.setText(mCurrentGroup.getGroupId());
         } else {
             mGroupIdTextView.setText(R.string.only_admin_can_see_this);
@@ -87,7 +87,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
         mUsersRecyclerView.setHasFixedSize(true);
 
         FirebaseRecyclerOptions<GroupUser> options = new FirebaseRecyclerOptions.Builder<GroupUser>().setLifecycleOwner(this)
-                .setQuery(sDatabaseManager.GroupChatsDbRef().child(mCurrentGroup.getGroupId())
+                .setQuery(sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId())
                         .child("groupUsers"), GroupUser.class).build();
 
         final GroupUserAdapter userAdapter = new GroupUserAdapter(this, options, mCurrentGroup);
@@ -97,7 +97,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
         mUsersRecyclerView.addItemDecoration(new DividerItemDecoration(mUsersRecyclerView.getContext(), DividerItemDecoration.VERTICAL));
     }
 
-    public void LeaveGroupBtnClick(View view) {
+    public void leaveGroupBtnClick(View view) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -105,7 +105,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.dialog_positive_btn, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        sDatabaseManager.LeaveGroup(mCurrentGroup.getGroupId());
+                        sDatabaseManager.leaveGroup(mCurrentGroup.getGroupId());
                         startActivity(new Intent(GroupChatInfoActivity.this, MainActivity.class));
                         finish();
                     }
@@ -117,7 +117,7 @@ public class GroupChatInfoActivity extends AppCompatActivity {
         }).show();
     }
 
-    public void ShareGroupIdClickBtn(View view) {
+    public void shareGroupIdClickBtn(View view) {
 
         String idMessage = mCurrentGroup.getGroupId() + getString(R.string.group_id_share_message);
 

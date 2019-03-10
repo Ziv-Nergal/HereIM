@@ -114,7 +114,7 @@ public class DisplayGroupPhotoFragment extends DialogFragment implements View.On
                             .setQuality(80)
                             .compressToFile(new File(Objects.requireNonNull(result.getUri().getPath())));
 
-                    sDatabaseManager.UploadGroupPhoto(Uri.fromFile(userImageFile), mDisplayedGroup.getGroupId(), new DatabaseManager.OnGroupPhotoUploadedListener() {
+                    sDatabaseManager.uploadGroupPhoto(Uri.fromFile(userImageFile), mDisplayedGroup.getGroupId(), new DatabaseManager.OnGroupPhotoUploadedListener() {
                         @Override
                         public void onPhotoUploaded() {
 

@@ -47,7 +47,7 @@ public class GroupRequestsFragment extends Fragment implements OnItemsCountChang
         mGroupRequestsRecyclerView.addItemDecoration(new DividerItemDecoration(mGroupRequestsRecyclerView.getContext(), DividerItemDecoration.VERTICAL));
 
         FirebaseRecyclerOptions<GroupRequest> options = new FirebaseRecyclerOptions.Builder<GroupRequest>().setLifecycleOwner(this)
-                .setQuery(sCurrentFirebaseUser.GroupRequestNotificationsDbRef(), GroupRequest.class).build();
+                .setQuery(sCurrentFirebaseUser.groupRequestNotificationsDbRef(), GroupRequest.class).build();
 
         GroupRequestsAdapter groupRequestsAdapter = new GroupRequestsAdapter(options, this);
 

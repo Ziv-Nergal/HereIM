@@ -76,7 +76,7 @@
             app:srcCompat="@drawable/ic_send_24dp"
             android:layout_gravity="center"
             android:background="@drawable/btn_green_circle_white_stroke"
-            android:onClick="SendMessageBtnClick"
+            android:onClick="sendMessageBtnClick"
             app:layout_constraintEnd_toEndOf="@id/create_group_photo_image_view"
             app:layout_constraintBottom_toBottomOf="@id/create_group_photo_image_view"
             tools:ignore="ContentDescription" />

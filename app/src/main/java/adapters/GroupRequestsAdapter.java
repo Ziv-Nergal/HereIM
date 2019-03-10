@@ -1,6 +1,5 @@
 package adapters;
 
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,8 +9,6 @@ import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.github.jorgecastilloprz.FABProgressCircle;
-import com.github.jorgecastilloprz.listeners.FABProgressListener;
 import com.squareup.picasso.Picasso;
 
 import database_classes.GroupRequest;
@@ -48,10 +45,10 @@ public class GroupRequestsAdapter extends FirebaseRecyclerAdapter<GroupRequest, 
 
     @Override
     protected void onBindViewHolder(@NonNull GroupRequestViewHolder holder, int position, @NonNull GroupRequest groupRequest) {
-        holder.BindView(groupRequest);
+        holder.bindView(groupRequest);
     }
 
-    class GroupRequestViewHolder extends BaseViewHolder<GroupRequest>{
+    class GroupRequestViewHolder extends BaseViewHolder<GroupRequest> {
 
         private CircleImageView mSenderPhoto;
 
@@ -72,7 +69,7 @@ public class GroupRequestsAdapter extends FirebaseRecyclerAdapter<GroupRequest, 
         }
 
         @Override
-        void BindView(final GroupRequest groupRequest) {
+        void bindView(final GroupRequest groupRequest) {
 
             Picasso.get().load(groupRequest.getSenderPhoto()).placeholder(R.drawable.img_blank_profile).into(mSenderPhoto);
             mSenderName.setText(groupRequest.getSenderName());
@@ -81,15 +78,15 @@ public class GroupRequestsAdapter extends FirebaseRecyclerAdapter<GroupRequest, 
             mAcceptRequestBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sDatabaseManager.AddUserToGroup(groupRequest.getSenderId(), groupRequest.getGroupId());
-                    sCurrentFirebaseUser.GroupRequestNotificationsDbRef().child(groupRequest.getSenderId()).setValue(null);
+                    sDatabaseManager.addUserToGroup(groupRequest.getSenderId(), groupRequest.getGroupId());
+                    sCurrentFirebaseUser.groupRequestNotificationsDbRef().child(groupRequest.getSenderId()).setValue(null);
                 }
             });
 
             mDenyRequestBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sCurrentFirebaseUser.GroupRequestNotificationsDbRef().child(groupRequest.getSenderId()).setValue(null);
+                    sCurrentFirebaseUser.groupRequestNotificationsDbRef().child(groupRequest.getSenderId()).setValue(null);
                 }
             });
         }

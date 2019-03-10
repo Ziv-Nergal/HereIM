@@ -41,7 +41,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private ProgressBar mProgressBar;
 
-    private Handler mDelayHandler = new Handler();
+    private final Handler mDelayHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +55,7 @@ public class SignUpActivity extends AppCompatActivity {
         mProgressBar = findViewById(R.id.sign_up_progressbar);
     }
 
-    public void SignUpBtnClick(View view) {
+    public void signUpBtnClick(View view) {
 
         String email = mEmailET.getText().toString().trim();
         String fullName = mFullNameET.getText().toString().trim();
@@ -64,28 +64,28 @@ public class SignUpActivity extends AppCompatActivity {
 
         try{
             AuthManager.ValidateInputsNotEmpty(new EditText[]{mFullNameET, mEmailET, mPasswordET, mConfirmPassET});
-            ValidateMatchingPasswords(password, confirmPassword);
+            validateMatchingPasswords(password, confirmPassword);
             createNewUser(email, fullName, password);
         }catch (Exception ex){
             Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
-    public static void ValidateMatchingPasswords(String iPassword, String iConfirmPassword) throws Exception{
-        if(!iPassword.equals(iConfirmPassword)){
+    private void validateMatchingPasswords(String password, String confirmPassword) throws Exception{
+        if(!password.equals(confirmPassword)){
             throw new Exception("Passwords do not match!");
         }
     }
 
-    private void createNewUser(final String iEmail, final String iFullName, final String iPassword) {
+    private void createNewUser(final String email, final String fullName, final String password) {
 
         mProgressBar.setVisibility(View.VISIBLE);
 
-        mAuth.createUserWithEmailAndPassword(iEmail, iPassword)
+        mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        insertNewUserToDataBase(iEmail, iFullName);
+                        insertNewUserToDataBase(email, fullName);
                         if(task.isSuccessful()) {
                             mDelayHandler.postDelayed(new Runnable() {
                                 @Override
@@ -105,18 +105,18 @@ public class SignUpActivity extends AppCompatActivity {
                 });
     }
 
-    private void insertNewUserToDataBase(String iEmail, String iFullName) {
+    private void insertNewUserToDataBase(String email, String fullName) {
 
         if(mAuth.getCurrentUser() != null){
 
-            mAuth.getCurrentUser().updateProfile(new UserProfileChangeRequest.Builder().setDisplayName(iFullName).setPhotoUri(DEFAULT_PHOTO_URI).build());
+            mAuth.getCurrentUser().updateProfile(new UserProfileChangeRequest.Builder().setDisplayName(fullName).setPhotoUri(DEFAULT_PHOTO_URI).build());
 
             final DatabaseReference currentUserRef =  FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
 
             Map<String, Object> userDetailsList = new HashMap<>();
             userDetailsList.put("uid", mAuth.getCurrentUser().getUid());
-            userDetailsList.put("fullName", iFullName);
-            userDetailsList.put("email", iEmail);
+            userDetailsList.put("fullName", fullName);
+            userDetailsList.put("email", email);
             userDetailsList.put("photoUri", DEFAULT_PHOTO_URI.toString());
             userDetailsList.put("status", getString(R.string.default_status));
             userDetailsList.put("deviceToken", Objects.requireNonNull(FirebaseInstanceId.getInstance().getToken()));
@@ -137,7 +137,7 @@ public class SignUpActivity extends AppCompatActivity {
         finish();
     }
 
-    public void LoginBtnClick(View view) {
+    public void loginBtnClick(View view) {
         onBackPressed();
     }
 }

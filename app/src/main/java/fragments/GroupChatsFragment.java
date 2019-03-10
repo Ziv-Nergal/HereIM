@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -90,9 +89,9 @@ public class GroupChatsFragment extends Fragment implements GroupChatAdapter.OnG
     private void loadGroupChatsToRecyclerView() {
 
         FirebaseRecyclerOptions<GroupChat> options = new FirebaseRecyclerOptions.Builder<GroupChat>().setLifecycleOwner(this)
-                .setQuery(sCurrentFirebaseUser.CurrentUserGroupsDbRef().orderByChild("timeStamp") , GroupChat.class).build();
+                .setQuery(sCurrentFirebaseUser.currentUserGroupsDbRef().orderByChild("timeStamp") , GroupChat.class).build();
 
-        mGroupChatsAdapter = new GroupChatAdapter(options, this, mContext);
+        mGroupChatsAdapter = new GroupChatAdapter(mContext, options, this);
         mGroupChatsAdapter.setGroupChatClickListener(this);
         mGroupChatsAdapter.setGroupChatPhotoClickListener(this);
         mGroupChatsAdapter.startListening();

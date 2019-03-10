@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 
 import gis.hereim.R;
 
@@ -28,7 +27,7 @@ public class SoundFxManager {
         }.execute();
     }
 
-    public static void PlaySoundFx(eSoundEffect fx, Context context){
+    public static void PlaySoundFx(eSoundEffect fx){
         switch (fx) {
             case MESSAGE_FX: mFxPlayer.play(mMsgFx, 1, 1, 0, 0, 1); break;
             case GROUP_REQUEST_FX: mFxPlayer.play(mGroupRequestFx, 1, 1, 0, 0, 1); break;

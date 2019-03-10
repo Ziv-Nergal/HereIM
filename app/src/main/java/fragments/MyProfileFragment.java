@@ -29,8 +29,6 @@ public class MyProfileFragment extends Fragment {
 
     private Context mContext;
 
-    private View mFragmentView;
-
     private CircleImageView mUserProfilePhoto;
 
     private TextView mUserName;
@@ -49,14 +47,14 @@ public class MyProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        mFragmentView = inflater.inflate(R.layout.fragment_my_profile, container, false);
+        View fragmentView = inflater.inflate(R.layout.fragment_my_profile, container, false);
 
-        mUserProfilePhoto = mFragmentView.findViewById(R.id.profile_fragment_photo);
-        mUserName = mFragmentView.findViewById(R.id.profile_fragment_full_name);
-        mUserEmail = mFragmentView.findViewById(R.id.profile_fragment_email);
-        mUserStatus = mFragmentView.findViewById(R.id.profile_fragment_status);
+        mUserProfilePhoto = fragmentView.findViewById(R.id.profile_fragment_photo);
+        mUserName = fragmentView.findViewById(R.id.profile_fragment_full_name);
+        mUserEmail = fragmentView.findViewById(R.id.profile_fragment_email);
+        mUserStatus = fragmentView.findViewById(R.id.profile_fragment_status);
 
-        mFragmentView.findViewById(R.id.profile_fragment_change_photo_btn).setOnClickListener(new View.OnClickListener() {
+        fragmentView.findViewById(R.id.profile_fragment_change_photo_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 changePhotoBtnClick();
@@ -65,14 +63,14 @@ public class MyProfileFragment extends Fragment {
 
         loadUserDetails();
 
-        return mFragmentView;
+        return fragmentView;
     }
 
     private void loadUserDetails() {
-        mUserProfilePhoto.setImageURI(sCurrentFirebaseUser.GetUserPhotoUri());
-        mUserName.setText(sCurrentFirebaseUser.GetFullName());
-        mUserEmail.setText(sCurrentFirebaseUser.GetEmailAddress());
-        mUserStatus.setText(sCurrentFirebaseUser.GetUserStatus());
+        mUserProfilePhoto.setImageURI(sCurrentFirebaseUser.getUserPhotoUri());
+        mUserName.setText(sCurrentFirebaseUser.getFullName());
+        mUserEmail.setText(sCurrentFirebaseUser.getEmailAddress());
+        mUserStatus.setText(sCurrentFirebaseUser.getUserStatus());
     }
 
     private void changePhotoBtnClick() {
@@ -98,7 +96,7 @@ public class MyProfileFragment extends Fragment {
                             .setQuality(40)
                             .compressToFile(new File(Objects.requireNonNull(result.getUri().getPath())));
 
-                    sCurrentFirebaseUser.UpdatePhoto(Uri.fromFile(userImageFile));
+                    sCurrentFirebaseUser.updatePhoto(Uri.fromFile(userImageFile));
                 }
                 catch (IOException e) {
                     e.printStackTrace();

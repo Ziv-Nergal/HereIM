@@ -12,13 +12,13 @@ abstract class BaseViewHolder<T> extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
-    abstract void BindView(T iObjectToBind);
+    abstract void bindView(T objectToBind);
 
-    public void setViewHolderId(String mViewHolderId) {
-        this.mViewHolderId = mViewHolderId;
+    void setViewHolderId(String viewHolderId) {
+        this.mViewHolderId = viewHolderId;
     }
 
-    public String getViewHolderId() {
+    String getViewHolderId() {
         return mViewHolderId;
     }
 }

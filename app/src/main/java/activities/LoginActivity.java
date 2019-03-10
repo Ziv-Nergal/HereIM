@@ -29,7 +29,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private ProgressBar mProgressBar;
 
-    private Handler mDelayHandler = new Handler();
+    private final Handler mDelayHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
         mProgressBar = findViewById(R.id.login_progressbar);
     }
 
-    public void LoginBtnClick(View view) {
+    public void loginBtnClick(View view) {
 
         String email = mEmailET.getText().toString().trim();
         String password = mPasswordET.getText().toString().trim();
@@ -80,7 +80,7 @@ public class LoginActivity extends AppCompatActivity {
         }, 1500);
     }
 
-    public void SignUpBtnCLick(View view) {
+    public void signUpBtnCLick(View view) {
         Intent profileIntent = new Intent(LoginActivity.this, SignUpActivity.class);
         ActivityOptionsCompat options = ActivityOptionsCompat.
                 makeSceneTransitionAnimation(LoginActivity.this,

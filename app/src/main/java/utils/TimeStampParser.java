@@ -1,11 +1,7 @@
 package utils;
 
-import android.content.Context;
-
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class TimeStampParser {
@@ -15,60 +11,60 @@ public class TimeStampParser {
     private static final int HOUR_MILLIS = 60 * MINUTE_MILLIS;
     private static final int DAY_MILLIS = 24 * HOUR_MILLIS;
 
-    public static String NonAccurateParse(long iTime){
+    public static String NonAccurateParse(long timeLong){
 
-        String time = null;
+        String timeStr = null;
 
-        if (iTime < 1000000000000L) {
+        if (timeLong < 1000000000000L) {
             // if timestamp given in seconds, convert to millis
-            iTime *= 1000;
+            timeLong *= 1000;
         }
 
         long now = System.currentTimeMillis();
 
-        if (iTime > now || iTime <= 0) {
-            return time;
+        if (timeLong > now || timeLong <= 0) {
+            return timeStr;
         }
 
         // TODO: localize
-        final long diff = now - iTime;
+        final long diff = now - timeLong;
 
         if (diff < MINUTE_MILLIS) {
-            time = "just now";
+            timeStr = "just now";
         }
         else if (diff < 2 * MINUTE_MILLIS) {
-            time = "a minute ago";
+            timeStr = "a minute ago";
         }
         else if (diff < 50 * MINUTE_MILLIS) {
-            time = diff / MINUTE_MILLIS + " minutes ago";
+            timeStr = diff / MINUTE_MILLIS + " minutes ago";
         }
         else if (diff < 90 * MINUTE_MILLIS) {
-            time = "an hour ago";
+            timeStr = "an hour ago";
         }
         else if (diff < 24 * HOUR_MILLIS) {
-            time = diff / HOUR_MILLIS + " hours ago";
+            timeStr = diff / HOUR_MILLIS + " hours ago";
         }
         else if (diff < 48 * HOUR_MILLIS) {
-            time = "yesterday";
+            timeStr = "yesterday";
         }
         else {
-            time = diff / DAY_MILLIS + " days ago";
+            timeStr = diff / DAY_MILLIS + " days ago";
         }
 
-        return time;
+        return timeStr;
     }
 
-    public static String AccurateParse(long iTime){
+    public static String AccurateParse(long time){
 
-        if (iTime < 1000000000000L) {
+        if (time < 1000000000000L) {
             // if timestamp given in seconds, convert to millis
-            iTime *= 1000;
+            time *= 1000;
         }
 
         Calendar todayCalendar = Calendar.getInstance();
         Calendar timeStampCalendar = Calendar.getInstance();
 
-        todayCalendar.setTimeInMillis(iTime);
+        todayCalendar.setTimeInMillis(time);
 
         SimpleDateFormat simpleDateFormat;
 

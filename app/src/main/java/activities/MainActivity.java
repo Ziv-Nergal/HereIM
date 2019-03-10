@@ -25,7 +25,6 @@ import fragments.GroupRequestsFragment;
 import fragments.MyProfileFragment;
 import fragments.SearchGroupsFragment;
 import gis.hereim.R;
-import gis.hereim.SettingsActivity;
 import utils.SoundFxManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -81,11 +80,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sCurrentFirebaseUser = FirebaseUser.GetInstance();
+        sCurrentFirebaseUser = FirebaseUser.getInstance();
 
-        if(sCurrentFirebaseUser.IsLoggedIn()){
-            sCurrentFirebaseUser.SetIsOnline(true);
-            sDatabaseManager = DatabaseManager.GetInstance();
+        if(sCurrentFirebaseUser.isLoggedIn()){
+            sCurrentFirebaseUser.setIsOnline(true);
+            sDatabaseManager = DatabaseManager.getInstance();
             SoundFxManager.InitManager(this);
             setActivityUI();
         }else {
@@ -119,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void listenToGroupRequests() {
 
-        sDatabaseManager.ListenToGroupRequestNotification(new DatabaseManager.GroupRequestStateListener() {
+        sDatabaseManager.listenToGroupRequestNotification(new DatabaseManager.GroupRequestStateListener() {
             @Override
             public void onStateChanged(boolean haveGroupRequests) {
 
@@ -164,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage(R.string.log_out_msg).setPositiveButton(R.string.dialog_positive_btn, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                sCurrentFirebaseUser.Logout();
+                sCurrentFirebaseUser.logout();
                 goToLoginPage();
                 dialog.dismiss();
             }

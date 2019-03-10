@@ -6,8 +6,6 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
 
-import com.austingreco.imagelistpreference.ImageListPreference;
-
 import gis.hereim.R;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
@@ -24,16 +22,16 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
         EditTextPreference statusPreference = (EditTextPreference) getPreferenceManager().findPreference("pref_info_status");
         
         if (emailPreference != null) {
-            emailPreference.setSummary(sCurrentFirebaseUser.GetEmailAddress());
+            emailPreference.setSummary(sCurrentFirebaseUser.getEmailAddress());
         }
 
         if (fullNamePreference != null) {
-            fullNamePreference.setSummary(sCurrentFirebaseUser.GetFullName());
+            fullNamePreference.setSummary(sCurrentFirebaseUser.getFullName());
             fullNamePreference.setOnPreferenceChangeListener(this);
         }
 
         if (statusPreference != null) {
-            statusPreference.setSummary(sCurrentFirebaseUser.GetUserStatus());
+            statusPreference.setSummary(sCurrentFirebaseUser.getUserStatus());
             statusPreference.setOnPreferenceChangeListener(this);
         }
     }
@@ -56,10 +54,10 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
     }
 
     private void changeFullName(Object newValue) {
-        sCurrentFirebaseUser.SetFullName(newValue.toString());
+        sCurrentFirebaseUser.setFullName(newValue.toString());
     }
 
     private void changeStatus(Object newValue) {
-        sCurrentFirebaseUser.SetUserStatus(newValue.toString());
+        sCurrentFirebaseUser.setUserStatus(newValue.toString());
     }
 }

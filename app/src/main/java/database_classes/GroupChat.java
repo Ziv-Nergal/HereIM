@@ -37,56 +37,28 @@ public class GroupChat implements Serializable {
         return groupId;
     }
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
-
     public String getAdminId() {
         return adminId;
-    }
-
-    public void setAdminId(String adminId) {
-        this.adminId = adminId;
     }
 
     public String getAdminName() {
         return adminName;
     }
 
-    public void setAdminName(String adminName) {
-        this.adminName = adminName;
-    }
-
     public String getGroupName() {
         return groupName;
-    }
-
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
     }
 
     public String getLastMsg() {
         return lastMsg;
     }
 
-    public void setLastMsg(String lastMsg) {
-        this.lastMsg = lastMsg;
-    }
-
     public String getGroupPhoto() {
         return groupPhoto;
     }
 
-    public void setGroupPhoto(String groupPhoto) {
-        this.groupPhoto = groupPhoto;
-    }
-
     public long getTimeStamp() {
         return timeStamp;
-    }
-
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
     }
 
     public Map<String, Object> getGroupUsers() {
