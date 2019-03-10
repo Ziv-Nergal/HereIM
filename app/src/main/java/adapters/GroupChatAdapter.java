@@ -31,15 +31,18 @@ import static activities.MainActivity.sDatabaseManager;
 
 public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupChatAdapter.GroupChatViewHolder> {
 
-    private Context mContext;
+    private static int sDefaultTextColor;
+    private static int sGreenTextColor;
 
-    private Map<String, ValueEventListener> mMsgNotificationsValueEventListenerMap = new HashMap<>();
-    private Map<String, ValueEventListener> mTypingValueEventListenerMap = new HashMap<>();
+    private static String sIsTypingMsg;
 
-    private OnItemsCountChangeListener mItemsCountChangeListener;
+    private static Map<String, ValueEventListener> sMsgNotificationsValueEventListenerMap = new HashMap<>();
+    private static Map<String, ValueEventListener> sTypingValueEventListenerMap = new HashMap<>();
 
-    private OnGroupChatClickListener mGroupChatClickListener;
-    private OnGroupChatPhotoClickListener mGroupChatPhotoClickListener;
+    private static OnItemsCountChangeListener sItemsCountChangeListener;
+
+    private static OnGroupChatClickListener sGroupChatClickListener;
+    private static OnGroupChatPhotoClickListener sGroupChatPhotoClickListener;
 
     public interface OnGroupChatClickListener {
         void onGroupChatClick(View view, GroupChat groupChat);
@@ -50,24 +53,26 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
     }
 
     public void setGroupChatClickListener(OnGroupChatClickListener iGroupChatClickListener) {
-        this.mGroupChatClickListener = iGroupChatClickListener;
+        sGroupChatClickListener = iGroupChatClickListener;
     }
 
     public void setGroupChatPhotoClickListener(OnGroupChatPhotoClickListener iGroupChatPhotoClickListener) {
-        this.mGroupChatPhotoClickListener = iGroupChatPhotoClickListener;
+        sGroupChatPhotoClickListener = iGroupChatPhotoClickListener;
     }
 
     @Override
     public int getItemCount() {
         int count = super.getItemCount();
-        mItemsCountChangeListener.onItemsCountChange(count);
+        sItemsCountChangeListener.onItemsCountChange(count);
         return count;
     }
 
     public GroupChatAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupChat> options, OnItemsCountChangeListener itemsCountChangeListener) {
         super(options);
-        mContext = context;
-        this.mItemsCountChangeListener = itemsCountChangeListener;
+        sItemsCountChangeListener = itemsCountChangeListener;
+        sDefaultTextColor = context.getResources().getColor(R.color.default_text_color);
+        sGreenTextColor = context.getResources().getColor(R.color.green);
+        sIsTypingMsg =  context.getResources().getString(R.string.is_typing);
     }
 
     @NonNull
@@ -86,14 +91,14 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
 
     public void removeAllListeners() {
 
-        for (String groupId : mMsgNotificationsValueEventListenerMap.keySet()) {
+        for (String groupId : sMsgNotificationsValueEventListenerMap.keySet()) {
             sCurrentFirebaseUser.messageNotificationsDbRef().child(groupId).child("notificationCount")
-                    .removeEventListener(Objects.requireNonNull(mMsgNotificationsValueEventListenerMap.get(groupId)));
+                    .removeEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(groupId)));
         }
 
-        for (String groupId : mTypingValueEventListenerMap.keySet()) {
+        for (String groupId : sTypingValueEventListenerMap.keySet()) {
             sDatabaseManager.groupChatsDbRef().child(groupId).child("typing")
-                    .removeEventListener(Objects.requireNonNull(mTypingValueEventListenerMap.get(groupId)));
+                    .removeEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(groupId)));
         }
     }
 
@@ -102,13 +107,13 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
         super.onViewDetachedFromWindow(holder);
 
         sCurrentFirebaseUser.messageNotificationsDbRef().child(holder.getViewHolderId()).child("notificationCount")
-                .removeEventListener(Objects.requireNonNull(mMsgNotificationsValueEventListenerMap.get(holder.getViewHolderId())));
+                .removeEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(holder.getViewHolderId())));
 
         sDatabaseManager.groupChatsDbRef().child(holder.getViewHolderId()).child("typing")
-                .removeEventListener(Objects.requireNonNull(mTypingValueEventListenerMap.get(holder.getViewHolderId())));
+                .removeEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(holder.getViewHolderId())));
     }
 
-    class GroupChatViewHolder extends BaseViewHolder<GroupChat> {
+    static class GroupChatViewHolder extends BaseViewHolder<GroupChat> {
 
         private CircleImageView mGroupPhoto;
 
@@ -129,6 +134,8 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
         @Override
         void bindView(final GroupChat groupChat) {
 
+            setViewHolderId(groupChat.getGroupId());
+
             mGroupName.setText(groupChat.getGroupName());
             mLastMsg.setText(groupChat.getLastMsg());
             mMsgTimeStamp.setText(TimeStampParser.AccurateParse(groupChat.getTimeStamp()));
@@ -136,7 +143,8 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
             sDatabaseManager.fetchGroupPhotoUrl(groupChat.getGroupId(), new DatabaseManager.FetchGroupPhotoCallback() {
                 @Override
                 public void onPhotoUrlFetched(final String photoUrl) {
-                    Picasso.get().load(photoUrl).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_group_chat).into(mGroupPhoto, new Callback() {
+                    Picasso.get().load(photoUrl).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_group_chat)
+                            .into(mGroupPhoto, new Callback() {
                         @Override
                         public void onSuccess() {
                             itemView.setVisibility(View.VISIBLE);
@@ -157,7 +165,7 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                     sDatabaseManager.fetchGroupById(groupChat.getGroupId(), new DatabaseManager.FetchGroupChatCallback() {
                         @Override
                         public void onGroupChatFetched(GroupChat groupChat) {
-                            mGroupChatClickListener.onGroupChatClick(view, groupChat);
+                            sGroupChatClickListener.onGroupChatClick(view, groupChat);
                         }
                     });
                 }
@@ -169,13 +177,12 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                     sDatabaseManager.fetchGroupById(groupChat.getGroupId(), new DatabaseManager.FetchGroupChatCallback() {
                         @Override
                         public void onGroupChatFetched(GroupChat groupChat) {
-                            mGroupChatPhotoClickListener.onGroupChatPhotoClick(view, groupChat);
+                            sGroupChatPhotoClickListener.onGroupChatPhotoClick(view, groupChat);
                         }
                     });
                 }
             });
 
-            this.setViewHolderId(groupChat.getGroupId());
             listenToMessageNotifications(groupChat);
             listenToUsersTypingEvents(groupChat);
         }
@@ -199,9 +206,9 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                 public void onCancelled(@NonNull DatabaseError databaseError) { }
             };
 
-            mMsgNotificationsValueEventListenerMap.put(groupChat.getGroupId(), notificationValueEventListener);
+            sMsgNotificationsValueEventListenerMap.put(groupChat.getGroupId(), notificationValueEventListener);
             sCurrentFirebaseUser.messageNotificationsDbRef().child(groupChat.getGroupId()).child("notificationCount")
-                    .addValueEventListener(Objects.requireNonNull(mMsgNotificationsValueEventListenerMap.get(groupChat.getGroupId())));
+                    .addValueEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(groupChat.getGroupId())));
         }
 
         private void listenToUsersTypingEvents(final GroupChat groupChat) {
@@ -212,12 +219,12 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                     String typingUserName = dataSnapshot.getValue(String.class);
 
                     if(typingUserName != null && !typingUserName.equals(sCurrentFirebaseUser.getFullName()) && !typingUserName.equals("nobody")){
-                        String msgToDisplay = dataSnapshot.getValue(String.class) + " " + mContext.getResources().getString(R.string.is_typing);
+                        String msgToDisplay = dataSnapshot.getValue(String.class) + " " +sIsTypingMsg;
                         mLastMsg.setText(msgToDisplay);
-                        mLastMsg.setTextColor(mContext.getResources().getColor(R.color.green));
+                        mLastMsg.setTextColor(sGreenTextColor);
                     } else {
                         mLastMsg.setText(groupChat.getLastMsg());
-                        mLastMsg.setTextColor(mContext.getResources().getColor(R.color.default_text_color));
+                        mLastMsg.setTextColor(sDefaultTextColor);
                     }
                 }
 
@@ -225,9 +232,9 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                 public void onCancelled(@NonNull DatabaseError databaseError) { }
             };
 
-            mTypingValueEventListenerMap.put(groupChat.getGroupId(), typingEventListener);
+            sTypingValueEventListenerMap.put(groupChat.getGroupId(), typingEventListener);
             sDatabaseManager.groupChatsDbRef().child(groupChat.getGroupId()).child("typing")
-                    .addValueEventListener(Objects.requireNonNull(mTypingValueEventListenerMap.get(groupChat.getGroupId())));
+                    .addValueEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(groupChat.getGroupId())));
         }
     }
 }
