@@ -62,8 +62,4 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
     private void changeStatus(Object newValue) {
         sCurrentFirebaseUser.SetUserStatus(newValue.toString());
     }
-
-    private void changeBackground() {
-
-    }
 }
