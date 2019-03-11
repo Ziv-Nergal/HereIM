@@ -78,6 +78,7 @@ public class FirebaseUser {
             mFullName = mFirebaseUser.getDisplayName();
             mEmailAddress = mFirebaseUser.getEmail();
             mDeviceToken = FirebaseInstanceId.getInstance().getToken();
+            mCurrentUserDbRef.child("deviceToken").setValue(mDeviceToken);
             mUserColor = ColorParser.Pars(mUid);
             mCurrentUserDbRef.child("online").onDisconnect().setValue(false);
 

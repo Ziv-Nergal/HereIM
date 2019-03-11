@@ -258,7 +258,7 @@ public class DatabaseManager {
 
     private void notifyGroupUsers(GroupChat groupChat, final String msgContent, final Map<String, String> timeStamp) {
 
-        Map<String, Object> notificationDetailsMap = new HashMap<>();
+        final Map<String, Object> notificationDetailsMap = new HashMap<>();
 
         notificationDetailsMap.put("groupName", groupChat.getGroupName());
         notificationDetailsMap.put("content", msgContent);
@@ -269,29 +269,34 @@ public class DatabaseManager {
         for (String userToSendToId : groupChat.getGroupUsers().keySet()) {
 
             // Get the node of the message notifications of the user that you want to notify
-            DatabaseReference notificationRef = mUsersDbRef.child(userToSendToId).child(NOTIFICATIONS_DB_REF_NAME).child("messages").child(groupChat.getGroupId());
+            final DatabaseReference notificationRef = mUsersDbRef.child(userToSendToId).child(NOTIFICATIONS_DB_REF_NAME).child("messages").child(groupChat.getGroupId());
 
             // Update the msg content and timeStamp on the user groups node because the groups are sorted by my group nodes
             mUsersDbRef.child(userToSendToId).child("groups").child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msgContent);
             mUsersDbRef.child(userToSendToId).child("groups").child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
 
-            String notificationId = notificationRef.push().getKey();
+            final String notificationId = notificationRef.push().getKey();
 
             // Make sure to not notify yourself
             if (notificationId != null && !userToSendToId.equals(sCurrentFirebaseUser.getUid())) {
 
-                HashMap userDetails = (HashMap) groupChat.getGroupUsers().get(userToSendToId);
+                mUsersDbRef.child(userToSendToId).child("deviceToken").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                if (userDetails != null) {
-                    String deviceToken = (String) userDetails.get("deviceToken");
+                        String deviceToken = dataSnapshot.getValue(String.class);
 
-                    if (deviceToken != null) {
-                        notificationDetailsMap.put("deviceToken", deviceToken);
+                        if (deviceToken != null) {
+                            notificationDetailsMap.put("deviceToken", deviceToken);
+
+                            // Create a notification node in the destination user's database
+                            notificationRef.child(notificationId).updateChildren(notificationDetailsMap);
+                        }
                     }
 
-                    // Create a notification node in the destination user's database
-                    notificationRef.child(notificationId).updateChildren(notificationDetailsMap);
-                }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
             }
         }
     }
