@@ -40,16 +40,14 @@ public class DatabaseManager {
     private static DatabaseManager sInstance = null;
 
     private DatabaseReference mUsersDbRef;
-
     private DatabaseReference mGroupChatsDbRef;
 
     public interface OnGroupCreatedListener {
         void onCreated(String groupId);
-
     }
+
     public interface OnGroupPhotoUploadedListener {
         void onPhotoUploaded();
-
     }
 
     public interface OnGroupNamesChangeListener {
@@ -170,8 +168,9 @@ public class DatabaseManager {
         });
     }
 
-    public void RemoveUserFromGroup(final String userId, final String groupId) {
-        mGroupChatsDbRef.child("groupUsers").child(userId).setValue(null);
+    // Remember to finish this!
+    public void removeUserFromGroup(final String userId, final String groupId) {
+        mGroupChatsDbRef.child(groupId).child("groupUsers").child(userId).setValue(null);
         mUsersDbRef.child(userId).child("groups").child(groupId).setValue(null);
     }
 

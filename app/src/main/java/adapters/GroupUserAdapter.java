@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -25,6 +26,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import database_classes.GroupUser;
 import gis.hereim.R;
 
+import static activities.MainActivity.sCurrentFirebaseUser;
 import static activities.MainActivity.sDatabaseManager;
 
 public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseViewHolder<GroupUser>> {
@@ -39,15 +41,15 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
     private GroupChat mGroupChat;
 
-    /*private GroupUserAdapter.OnUserClickListener mUserClickListener;
+    private GroupUserAdapter.OnUserClickListener mRemoveUserClickListener;
 
     public interface OnUserClickListener {
-        void onUserClick(View view, GroupUser user, CircleImageView userPhoto, TextView userName);
+        void onRemoveUserClickGroupUser(GroupUser user);
     }
 
-    public void setUserClickListener(OnUserClickListener mUserClickListener) {
-        this.mUserClickListener = mUserClickListener;
-    }*/
+    public void setUserClickListener(OnUserClickListener removeUserClickListener) {
+        this.mRemoveUserClickListener = removeUserClickListener;
+    }
 
     public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options, GroupChat groupChat) {
         super(options);
@@ -102,14 +104,16 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         private TextView mUserStatus;
         private TextView mIsAdmin;
         private TextView mUserOnlineState;
+        private ImageButton mRemoveUserBtn;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
             mUserPhoto = itemView.findViewById(R.id.user_cell_photo);
-            mUserName = itemView.findViewById(R.id.user_cell_name);
-            mUserStatus = itemView.findViewById(R.id.user_cell_status);
-            mIsAdmin = itemView.findViewById(R.id.user_cell_is_admin);
-            mUserOnlineState = itemView.findViewById(R.id.user_cell_online_state);
+            mUserName = itemView.findViewById(R.id.user_item_name);
+            mUserStatus = itemView.findViewById(R.id.user_item_status);
+            mIsAdmin = itemView.findViewById(R.id.user_item_is_admin);
+            mUserOnlineState = itemView.findViewById(R.id.user_item_online_state);
+            mRemoveUserBtn = itemView.findViewById(R.id.user_item_remove_user_btn);
         }
 
         @Override
@@ -130,6 +134,12 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
                 mIsAdmin.setVisibility(View.VISIBLE);
             }
 
+            if(mGroupChat.getAdminId().equals(sCurrentFirebaseUser.getUid())){
+                if(!groupUser.getUid().equals(sCurrentFirebaseUser.getUid())){
+                    mRemoveUserBtn.setVisibility(View.VISIBLE);
+                }
+            }
+
             Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
                 @Override
                 public void onSuccess() { }
@@ -137,6 +147,13 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
                 @Override
                 public void onError(Exception e) {
                     Picasso.get().load(groupUser.getPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
+                }
+            });
+
+            mRemoveUserBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRemoveUserClickListener.onRemoveUserClickGroupUser(groupUser);
                 }
             });
         }

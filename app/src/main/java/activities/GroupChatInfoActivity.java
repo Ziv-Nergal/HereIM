@@ -93,6 +93,26 @@ public class GroupChatInfoActivity extends AppCompatActivity {
         final GroupUserAdapter userAdapter = new GroupUserAdapter(this, options, mCurrentGroup);
         userAdapter.startListening();
 
+        userAdapter.setUserClickListener(new GroupUserAdapter.OnUserClickListener() {
+            @Override
+            public void onRemoveUserClickGroupUser(final GroupUser user) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(GroupChatInfoActivity.this);
+
+                builder.setMessage(String.format("kick %s from %s group chat?", user.getFullName(), mCurrentGroup.getGroupName())).setPositiveButton(R.string.dialog_positive_btn, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sDatabaseManager.removeUserFromGroup(user.getUid(), mCurrentGroup.getGroupId());
+                    }
+                }).setNegativeButton(R.string.dialog_negative_btn, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+            }
+        });
+
         mUsersRecyclerView.setAdapter(userAdapter);
         mUsersRecyclerView.addItemDecoration(new DividerItemDecoration(mUsersRecyclerView.getContext(), DividerItemDecoration.VERTICAL));
     }
