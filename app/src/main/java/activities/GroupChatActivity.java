@@ -128,6 +128,16 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
             case "res/drawable/wallpaper_5.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_5); break;
             case "res/drawable/wallpaper_6.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_6); break;
             case "res/drawable/wallpaper_7.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_7); break;
+            case "res/drawable/wallpaper_8.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_8); break;
+            case "res/drawable/wallpaper_9.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_9); break;
+            case "res/drawable/wallpaper_10.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_10); break;
+            case "res/drawable/wallpaper_11.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_11); break;
+            case "res/drawable/wallpaper_12.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_12); break;
+            case "res/drawable/wallpaper_13.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_13); break;
+            case "res/drawable/wallpaper_14.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_14); break;
+            case "res/drawable/wallpaper_15.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_15); break;
+            case "res/drawable/wallpaper_16.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_16); break;
+            case "res/drawable/wallpaper_17.jpg": chatView.setBackgroundResource(R.drawable.wallpaper_17); break;
         }
     }
 

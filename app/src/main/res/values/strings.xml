@@ -88,6 +88,16 @@
         <item>Colored Sky</item>
         <item>Garfield Orange</item>
         <item>Sweet Caramel</item>
+        <item>Candy green</item>
+        <item>Marshmallow</item>
+        <item>Light blue</item>
+        <item>Butterscotch</item>
+        <item>Funky forest</item>
+        <item>Olive tree</item>
+        <item>Cerulean</item>
+        <item>Tiger</item>
+        <item>Tortilla</item>
+        <item>Purple haze</item>
 
     </string-array>
 
@@ -101,6 +111,16 @@
         <item>@drawable/wallpaper_5_small</item>
         <item>@drawable/wallpaper_6_small</item>
         <item>@drawable/wallpaper_7_small</item>
+        <item>@drawable/wallpaper_8_small</item>
+        <item>@drawable/wallpaper_9_small</item>
+        <item>@drawable/wallpaper_10_small</item>
+        <item>@drawable/wallpaper_11_small</item>
+        <item>@drawable/wallpaper_12_small</item>
+        <item>@drawable/wallpaper_13_small</item>
+        <item>@drawable/wallpaper_14_small</item>
+        <item>@drawable/wallpaper_15_small</item>
+        <item>@drawable/wallpaper_16_small</item>
+        <item>@drawable/wallpaper_17_small</item>
 
     </integer-array>
 
@@ -114,6 +134,16 @@
         <item>@drawable/wallpaper_5</item>
         <item>@drawable/wallpaper_6</item>
         <item>@drawable/wallpaper_7</item>
+        <item>@drawable/wallpaper_8</item>
+        <item>@drawable/wallpaper_9</item>
+        <item>@drawable/wallpaper_10</item>
+        <item>@drawable/wallpaper_11</item>
+        <item>@drawable/wallpaper_12</item>
+        <item>@drawable/wallpaper_13</item>
+        <item>@drawable/wallpaper_14</item>
+        <item>@drawable/wallpaper_15</item>
+        <item>@drawable/wallpaper_16</item>
+        <item>@drawable/wallpaper_17</item>
 
     </array>
 
