@@ -146,5 +146,8 @@
         <item>@drawable/wallpaper_17</item>
 
     </array>
+    <string name="title_activity_maps">Map</string>
+    <string name="permissions">This app needs to access your device location</string>
+    <string name="permissions_denied">We need your permissions to access the map...</string>
 
 </resources>

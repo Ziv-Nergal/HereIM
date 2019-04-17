@@ -9,6 +9,8 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import utils.SoundFxManager;
 
+import static activities.MainActivity.sCurrentFirebaseUser;
+
 public class NotificationsService extends FirebaseMessagingService {
 
     private static final String MSG_NOTIFICATION_DATA = "message";
@@ -22,23 +24,36 @@ public class NotificationsService extends FirebaseMessagingService {
 
             String notificationType = remoteMessage.getData().get("type");
 
-            if(notificationType != null){
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                    .getBoolean("pref_notification_vibrate", true)) {
+                Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-                if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("pref_notification_vibrate", true)) {
-                    Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-                    if (vibrator != null) {
-                        vibrator.vibrate(100);
-                    }
+                if (vibrator != null) {
+                    vibrator.vibrate(100);
                 }
+            }
 
-                if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("pref_notification_sound", true)) {
-                    switch (notificationType){
-                        case MSG_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.MESSAGE_FX); break;
-                        case GROUP_REQUEST_NOTIFICATION_DATA: SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.GROUP_REQUEST_FX); break;
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                    .getBoolean("pref_notification_sound", true)) {
+                if(notificationType != null) {
+                    switch (notificationType) {
+                        case MSG_NOTIFICATION_DATA:
+                            SoundFxManager
+                                    .PlaySoundFx(SoundFxManager.eSoundEffect.MESSAGE_FX);
+                            break;
+                        case GROUP_REQUEST_NOTIFICATION_DATA:
+                            SoundFxManager
+                                    .PlaySoundFx(SoundFxManager.eSoundEffect.GROUP_REQUEST_FX);
+                            break;
                     }
                 }
             }
         }
+    }
+
+    @Override
+    public void onNewToken(String s) {
+        super.onNewToken(s);
+        sCurrentFirebaseUser.setDeviceToken(s);
     }
 }

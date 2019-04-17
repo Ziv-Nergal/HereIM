@@ -1,6 +1,7 @@
 package firebase_utils;
 
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -19,7 +20,10 @@ import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import database_classes.GroupChat;
 import database_classes.GroupUser;
@@ -29,11 +33,12 @@ import static activities.MainActivity.sDatabaseManager;
 
 public class DatabaseManager {
 
-    private static final Uri DEFAULT_GROUP_PHOTO_URI = Uri.parse("android.resource://gis.hereim/drawable/img_blank_group_chat");
+    private static final Uri DEFAULT_GROUP_PHOTO_URI =
+            Uri.parse("android.resource://gis.hereim/drawable/img_blank_group_chat");
 
     private static final String APP_USERS_DB_REF_NAME = "Users";
-
     private static final String GROUP_CHATS_DB_REF_NAME = "Group Chats";
+    private static final String MESSAGES_DB_REF_NAME = "Messages";
 
     static final String NOTIFICATIONS_DB_REF_NAME = "Notifications";
 
@@ -41,17 +46,20 @@ public class DatabaseManager {
 
     private DatabaseReference mUsersDbRef;
     private DatabaseReference mGroupChatsDbRef;
+    private DatabaseReference mMessagesDbRef;
 
-    public interface OnGroupCreatedListener {
-        void onCreated(String groupId);
-    }
+    private static OnGroupNamesChangeListener mGroupNamesChangeListener;
+    private static OnTypingStatusChangeListener mTypingStatusChangeListener;
+    private static GroupRequestStateListener mGroupRequestStateListener;
 
-    public interface OnGroupPhotoUploadedListener {
-        void onPhotoUploaded();
+    private static Map<String, ValueEventListener> mMessageValueEventListenerMap = new HashMap<>();
+
+    public interface MessageNotificationsListener {
+        void onGotNotification(int numOfNotifications);
     }
 
     public interface OnGroupNamesChangeListener {
-        void onNamesChange(String names);
+        void onGroupUserNamesChange(String names);
     }
 
     public interface OnTypingStatusChangeListener {
@@ -60,21 +68,95 @@ public class DatabaseManager {
     }
 
     public interface GroupRequestStateListener {
-        void onStateChanged(boolean haveGroupRequests);
+        void onGroupRequestStateChanged(boolean haveGroupRequests);
+    }
+
+    public interface GroupCreatedCallback {
+        void onGroupCreated(String groupId);
+    }
+
+    public interface GroupPhotoUploadedCallback {
+        void onPhotoUploaded();
     }
 
     public interface FetchGroupPhotoCallback {
         void onPhotoUrlFetched(String photoUrl);
     }
-
     public interface FetchGroupChatCallback {
         void onGroupChatFetched(GroupChat groupChat);
+    }
+
+    public interface FetchGroupUsersPhotosCallback {
+        void onPhotosFetched(Map<String, String> usersPhotosUrl, Map<String, String> photosUrls);
     }
 
     public interface GroupSearchCallback {
         void groupFound(GroupChat groupChat);
         void groupNotFound();
     }
+
+    private static ValueEventListener sGroupUserNamesValueListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            String groupUserNames = "";
+            ArrayList<String> names = new ArrayList<>();
+
+            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                names.add(snapshot.child("fullName").getValue(String.class));
+            }
+
+            if(names.size() > 0){
+                int i = 0;
+
+                for (; i < names.size() - 1 ; i++) {
+                    groupUserNames = groupUserNames.concat(names.get(i) + ", ");
+                }
+
+                groupUserNames = groupUserNames.concat(names.get(i));
+
+                if(mGroupNamesChangeListener != null) {
+                    mGroupNamesChangeListener.onGroupUserNamesChange(groupUserNames);
+                }
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {}
+    };
+
+    private static ValueEventListener sTypingValueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            String typingUserName = dataSnapshot.getValue(String.class);
+
+            if(typingUserName != null && !typingUserName.equals(sCurrentFirebaseUser.getFullName()) && !typingUserName.equals("nobody")){
+                mTypingStatusChangeListener.onSomeoneTyping(typingUserName);
+            } else {
+                mTypingStatusChangeListener.onNobodyIsTyping();
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {}
+    };
+
+    private static ValueEventListener sGroupRequestsValueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            boolean hasRequests = false;
+
+            if(dataSnapshot.hasChild(NOTIFICATIONS_DB_REF_NAME)){
+                hasRequests = true;
+            }
+
+            mGroupRequestStateListener.onGroupRequestStateChanged(hasRequests);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
 
     private DatabaseManager() {
         init();
@@ -84,6 +166,8 @@ public class DatabaseManager {
         mUsersDbRef = FirebaseDatabase.getInstance().getReference().child(APP_USERS_DB_REF_NAME);
         mUsersDbRef.keepSynced(true);
         mGroupChatsDbRef = FirebaseDatabase.getInstance().getReference().child(GROUP_CHATS_DB_REF_NAME);
+        mGroupChatsDbRef.keepSynced(true);
+        mMessagesDbRef = FirebaseDatabase.getInstance().getReference().child(MESSAGES_DB_REF_NAME);
         mGroupChatsDbRef.keepSynced(true);
     }
 
@@ -103,7 +187,9 @@ public class DatabaseManager {
         return mGroupChatsDbRef;
     }
 
-    public void createNewGroup(String iGroupName, Uri iGroupPhotoUri, final OnGroupCreatedListener groupCreatedListener){
+    public DatabaseReference messagesDbRef() { return mMessagesDbRef; }
+
+    public void createNewGroup(String iGroupName, Uri iGroupPhotoUri, final GroupCreatedCallback callback){
 
         final String groupId = mGroupChatsDbRef.push().getKey();
 
@@ -120,7 +206,7 @@ public class DatabaseManager {
             groupDetails.put("groupPhoto", DEFAULT_GROUP_PHOTO_URI.toString());
             groupDetails.put("timeStamp", ServerValue.TIMESTAMP);
 
-            // Adding group details to groups node in database
+            // Adding group details to groups database reference
             mGroupChatsDbRef.child(groupId).updateChildren(groupDetails);
 
             // Adding group details to my user database reference
@@ -130,14 +216,14 @@ public class DatabaseManager {
             mGroupChatsDbRef.child(groupId).child("groupUsers").child(sCurrentFirebaseUser.getUid()).setValue(sCurrentFirebaseUser.getFirebaseClassInstance());
 
             if(iGroupPhotoUri != null){
-                uploadGroupPhoto(iGroupPhotoUri, groupId, new OnGroupPhotoUploadedListener() {
+                uploadGroupPhoto(iGroupPhotoUri, groupId, new GroupPhotoUploadedCallback() {
                     @Override
                     public void onPhotoUploaded() {
-                        groupCreatedListener.onCreated(groupId);
+                        callback.onGroupCreated(groupId);
                     }
                 });
             } else {
-                groupCreatedListener.onCreated(groupId);
+                callback.onGroupCreated(groupId);
             }
         }
     }
@@ -174,7 +260,7 @@ public class DatabaseManager {
         mUsersDbRef.child(userId).child("groups").child(groupId).setValue(null);
     }
 
-    public void uploadGroupPhoto(Uri iGroupPhoto, final String iGroupId, final OnGroupPhotoUploadedListener photoUploadedListener) {
+    public void uploadGroupPhoto(Uri iGroupPhoto, final String iGroupId, final GroupPhotoUploadedCallback callback) {
 
         final StorageReference imageStorageRef = FirebaseStorage
                 .getInstance()
@@ -191,16 +277,16 @@ public class DatabaseManager {
                     @Override
                     public void onSuccess(Uri uri) {
                         mGroupChatsDbRef.child(iGroupId).child("groupPhoto") .setValue(uri.toString());
-                        photoUploadedListener.onPhotoUploaded();
+                        callback.onPhotoUploaded();
                     }
                 });
             }
         });
     }
 
-    public void sendMessageToGroup(final String iGroupId, final String iMsg){
+    public void sendMessageToGroup(final GroupChat groupChat, final String msg){
 
-        String messageId = mGroupChatsDbRef.child(iGroupId).child("messages").push().getKey();
+        String messageId = mGroupChatsDbRef.child(groupChat.getGroupId()).child("messages").push().getKey();
 
         if(messageId != null) {
 
@@ -209,7 +295,7 @@ public class DatabaseManager {
             final Map<String, String> timeStamp = ServerValue.TIMESTAMP;
 
             msgDetails.put("msgId", messageId);
-            msgDetails.put("msgText", iMsg);
+            msgDetails.put("msgText", msg);
             msgDetails.put("msgType", "text message");
             msgDetails.put("senderId", sCurrentFirebaseUser.getUid());
             msgDetails.put("senderName", sCurrentFirebaseUser.getFullName());
@@ -217,42 +303,23 @@ public class DatabaseManager {
             msgDetails.put("senderColor", sCurrentFirebaseUser.getUserColor());
             msgDetails.put("timeStamp", timeStamp);
 
-            mGroupChatsDbRef.child(iGroupId).child("messages").child(messageId)
+            mMessagesDbRef.child(groupChat.getGroupId()).child(messageId)
                     .updateChildren(msgDetails, new DatabaseReference.CompletionListener() {
                         @Override
                         public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
 
                             // Update group last msg content and timeStamp to this msg content and timeStamp
-                            mGroupChatsDbRef.child(iGroupId).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + iMsg);
-                            mGroupChatsDbRef.child(iGroupId).child("timeStamp").setValue(timeStamp);
+                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
+                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
 
                             // Update group last msg content and timeStamp on my groups node because the groups are sorted by my group nodes
-                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(iGroupId).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + iMsg);
-                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(iGroupId).child("timeStamp").setValue(timeStamp);
+                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
+                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
 
-                            fetchGroupById(iGroupId, new FetchGroupChatCallback() {
-                                @Override
-                                public void onGroupChatFetched(GroupChat groupChat) {
-                                    // Send msg notification to all group users
-                                    notifyGroupUsers(groupChat, iMsg, timeStamp);
-                                }
-                            });
+                            notifyGroupUsers(groupChat, msg, timeStamp);
                         }
                     });
         }
-    }
-
-    public void fetchGroupById(String groupId, final FetchGroupChatCallback fetchGroupChatCallback) {
-
-        mGroupChatsDbRef.child(groupId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                fetchGroupChatCallback.onGroupChatFetched(dataSnapshot.getValue(GroupChat.class));
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
     }
 
     private void notifyGroupUsers(GroupChat groupChat, final String msgContent, final Map<String, String> timeStamp) {
@@ -300,32 +367,12 @@ public class DatabaseManager {
         }
     }
 
-    public void fetchGroupUsersNameList(String groupId, final OnGroupNamesChangeListener onGroupNamesChangeListener){
+    public void fetchGroupById(String groupId, final FetchGroupChatCallback callback) {
 
-        mGroupChatsDbRef.child(groupId).child("groupUsers").addValueEventListener(new ValueEventListener() {
+        mGroupChatsDbRef.child(groupId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                String groupUserNames = "";
-
-                ArrayList<String> names = new ArrayList<>();
-
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    names.add(snapshot.child("fullName").getValue(String.class));
-                }
-
-                if(names.size() > 0){
-
-                    int i = 0;
-
-                    for (; i < names.size() - 1 ; i++) {
-                        groupUserNames = groupUserNames.concat(names.get(i) + ", ");
-                    }
-
-                    groupUserNames = groupUserNames.concat(names.get(i));
-
-                    onGroupNamesChangeListener.onNamesChange(groupUserNames);
-                }
+                callback.onGroupChatFetched(dataSnapshot.getValue(GroupChat.class));
             }
 
             @Override
@@ -333,52 +380,84 @@ public class DatabaseManager {
         });
     }
 
-    public void listenToTypingStatus(String groupId, final OnTypingStatusChangeListener onTypingStatusChangeListener) {
+    public void listenToMessageNotifications(String groupId, final MessageNotificationsListener listener) {
 
-        mGroupChatsDbRef.child(groupId).child("typing").addValueEventListener(new ValueEventListener() {
-
+        ValueEventListener messageListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Integer notificationCount = dataSnapshot.getValue(Integer.class);
 
-                String typingUserName = dataSnapshot.getValue(String.class);
-
-                if(typingUserName != null && !typingUserName.equals(sCurrentFirebaseUser.getFullName()) && !typingUserName.equals("nobody")){
-                    onTypingStatusChangeListener.onSomeoneTyping(typingUserName);
-                } else {
-                    onTypingStatusChangeListener.onNobodyIsTyping();
+                if(notificationCount != null) {
+                    listener.onGotNotification(notificationCount);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
+        };
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mMessageValueEventListenerMap.put(groupId, messageListener);
+        }
+
+        sCurrentFirebaseUser.messageNotificationsDbRef().child(groupId).child("notificationCount")
+                .addValueEventListener(messageListener);
     }
 
-    public void listenToGroupRequestNotification(final GroupRequestStateListener groupRequestStateListener) {
+    public void stopListeningToMessageNotifications() {
 
-        sCurrentFirebaseUser.currentUserDbRef().addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        Iterator iterator = mMessageValueEventListenerMap.entrySet().iterator();
 
-                if(dataSnapshot.hasChild(NOTIFICATIONS_DB_REF_NAME)){
-                    groupRequestStateListener.onStateChanged(true);
-                } else {
-                    groupRequestStateListener.onStateChanged(false);
-                }
+        while (iterator.hasNext())
+        {
+            Map.Entry item = (Map.Entry) iterator.next();
+
+            String id = item.getKey().toString();
+
+            ValueEventListener toRemove = mMessageValueEventListenerMap.get(item.getKey());
+
+            if(toRemove != null){
+                sCurrentFirebaseUser.messageNotificationsDbRef().child(id).child("notificationCount")
+                        .removeEventListener(toRemove);
+                iterator.remove();
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
+        }
     }
 
-    public void fetchGroupPhotoUrl(String groupId, final FetchGroupPhotoCallback fetchGroupPhotoCallback) {
+    public void listenToGroupUsersNamesChange(String groupId, final OnGroupNamesChangeListener listener){
+        mGroupNamesChangeListener = listener;
+        mGroupChatsDbRef.child(groupId).child("groupUsers").addValueEventListener(sGroupUserNamesValueListener);
+    }
+
+    public void stopListeningToGroupUserNamesChange(String groupId) {
+        mGroupChatsDbRef.child(groupId).child("groupUsers").removeEventListener(sGroupUserNamesValueListener);
+    }
+
+    public void listenToTypingStatus(String groupId, final OnTypingStatusChangeListener listener) {
+        mTypingStatusChangeListener = listener;
+        mGroupChatsDbRef.child(groupId).child("typing").addValueEventListener(sTypingValueEventListener);
+    }
+
+    public void stopListeningToTypingStatus(String groupId) {
+        mGroupChatsDbRef.child(groupId).child("typing").removeEventListener(sTypingValueEventListener);
+    }
+//
+    public void listenToGroupRequestNotification(final GroupRequestStateListener listener) {
+        mGroupRequestStateListener = listener;
+        sCurrentFirebaseUser.currentUserDbRef().addValueEventListener(sGroupRequestsValueEventListener);
+    }
+
+    public void stopListeningToGroupRequestNotification() {
+        sCurrentFirebaseUser.currentUserDbRef().removeEventListener(sGroupRequestsValueEventListener);
+    }
+
+    public void fetchGroupPhotoUrl(String groupId, final FetchGroupPhotoCallback callback) {
 
         mGroupChatsDbRef.child(groupId).child("groupPhoto").addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                fetchGroupPhotoCallback.onPhotoUrlFetched(dataSnapshot.getValue(String.class));
+                callback.onPhotoUrlFetched(dataSnapshot.getValue(String.class));
             }
 
             @Override
@@ -386,15 +465,15 @@ public class DatabaseManager {
         });
     }
 
-    public void searchGroupById(final String groupId, final GroupSearchCallback groupSearchCallback) {
+    public void searchGroupById(final String groupId, final GroupSearchCallback callback) {
 
         mGroupChatsDbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.hasChild(groupId)){
-                    groupSearchCallback.groupFound(dataSnapshot.child(groupId).getValue(GroupChat.class));
+                    callback.groupFound(dataSnapshot.child(groupId).getValue(GroupChat.class));
                 } else {
-                    groupSearchCallback.groupNotFound();
+                    callback.groupNotFound();
                 }
             }
 
@@ -419,6 +498,36 @@ public class DatabaseManager {
         // Create a group request node in the group's admin database
         mUsersDbRef.child(groupChat.getAdminId()).child(NOTIFICATIONS_DB_REF_NAME).child("groupRequests")
                 .child(sCurrentFirebaseUser.getUid()).updateChildren(requestDetails);
+    }
+
+    public void fetchGroupUsersDetails(GroupChat groupChat, FetchGroupUsersPhotosCallback callback) {
+
+        final Map<String, String> usersPhotosUrl = new HashMap<>();
+        final Map<String, String> userNames = new HashMap<>();
+
+        for (final String userId : groupChat.getGroupUsers().keySet()) {
+            mUsersDbRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                    String url = dataSnapshot.child("photoUri").getValue(String.class);
+                    String fullName = dataSnapshot.child("fullName").getValue(String.class);
+
+                    if(url != null) {
+                        usersPhotosUrl.put(userId, url);
+                    }
+
+                    if(fullName != null) {
+                        userNames.put(userId, fullName);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {}
+            });
+        }
+
+        callback.onPhotosFetched(userNames, usersPhotosUrl);
     }
 
     public void leaveGroup(String groupId) {

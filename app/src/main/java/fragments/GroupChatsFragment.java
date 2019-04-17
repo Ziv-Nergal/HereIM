@@ -27,6 +27,7 @@ import adapters.GroupChatAdapter;
 
 import static activities.MainActivity.GROUP_CHAT_INTENT_EXTRA_KEY;
 import static activities.MainActivity.sCurrentFirebaseUser;
+import static activities.MainActivity.sDatabaseManager;
 
 public class GroupChatsFragment extends Fragment implements GroupChatAdapter.OnGroupChatClickListener, GroupChatAdapter.OnGroupChatPhotoClickListener, OnItemsCountChangeListener {
 
@@ -51,7 +52,7 @@ public class GroupChatsFragment extends Fragment implements GroupChatAdapter.OnG
     @Override
     public void onPause() {
         super.onPause();
-        mGroupChatsAdapter.removeAllListeners();
+        sDatabaseManager.stopListeningToMessageNotifications();
     }
 
     @Override
@@ -89,7 +90,7 @@ public class GroupChatsFragment extends Fragment implements GroupChatAdapter.OnG
     private void loadGroupChatsToRecyclerView() {
 
         FirebaseRecyclerOptions<GroupChat> options = new FirebaseRecyclerOptions.Builder<GroupChat>().setLifecycleOwner(this)
-                .setQuery(sCurrentFirebaseUser.currentUserGroupsDbRef().orderByChild("timeStamp") , GroupChat.class).build();
+                .setQuery(sCurrentFirebaseUser.currentUserGroupsDbRef().orderByChild("timeStamp"), GroupChat.class).build();
 
         mGroupChatsAdapter = new GroupChatAdapter(mContext, options, this);
         mGroupChatsAdapter.setGroupChatClickListener(this);

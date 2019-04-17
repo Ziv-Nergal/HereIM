@@ -86,7 +86,8 @@ public class GroupChatInfoActivity extends AppCompatActivity {
 
         mUsersRecyclerView.setHasFixedSize(true);
 
-        FirebaseRecyclerOptions<GroupUser> options = new FirebaseRecyclerOptions.Builder<GroupUser>().setLifecycleOwner(this)
+        FirebaseRecyclerOptions<GroupUser> options = new FirebaseRecyclerOptions.Builder<GroupUser>()
+                .setLifecycleOwner(this)
                 .setQuery(sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId())
                         .child("groupUsers"), GroupUser.class).build();
 
@@ -99,7 +100,8 @@ public class GroupChatInfoActivity extends AppCompatActivity {
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(GroupChatInfoActivity.this);
 
-                builder.setMessage(String.format("kick %s from %s group chat?", user.getFullName(), mCurrentGroup.getGroupName())).setPositiveButton(R.string.dialog_positive_btn, new DialogInterface.OnClickListener() {
+                builder.setMessage(String.format("kick %s from %s group chat?", user.getFullName(),
+                        mCurrentGroup.getGroupName())).setPositiveButton(R.string.dialog_positive_btn, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         sDatabaseManager.removeUserFromGroup(user.getUid(), mCurrentGroup.getGroupId());
@@ -114,7 +116,8 @@ public class GroupChatInfoActivity extends AppCompatActivity {
         });
 
         mUsersRecyclerView.setAdapter(userAdapter);
-        mUsersRecyclerView.addItemDecoration(new DividerItemDecoration(mUsersRecyclerView.getContext(), DividerItemDecoration.VERTICAL));
+        mUsersRecyclerView.addItemDecoration(new DividerItemDecoration(mUsersRecyclerView.getContext(),
+                DividerItemDecoration.VERTICAL));
     }
 
     public void leaveGroupBtnClick(View view) {
@@ -126,7 +129,8 @@ public class GroupChatInfoActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         sDatabaseManager.leaveGroup(mCurrentGroup.getGroupId());
-                        startActivity(new Intent(GroupChatInfoActivity.this, MainActivity.class));
+                        startActivity(new Intent(GroupChatInfoActivity.this,
+                                MainActivity.class));
                         finish();
                     }
                 }).setNegativeButton(R.string.dialog_negative_btn, new DialogInterface.OnClickListener() {
@@ -139,13 +143,15 @@ public class GroupChatInfoActivity extends AppCompatActivity {
 
     public void shareGroupIdClickBtn(View view) {
 
-        String idMessage = mCurrentGroup.getGroupId() + getString(R.string.group_id_share_message);
+        String idMessage = mCurrentGroup.getGroupId() +
+                getString(R.string.group_id_share_message);
 
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT, idMessage);
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "id_message");
-        startActivity(Intent.createChooser(shareIntent, getResources().getString(R.string.group_id_instructions_short)));
+        startActivity(Intent.createChooser(shareIntent,
+                getResources().getString(R.string.group_id_instructions_short)));
     }
 
     private void goToLoginPage() {

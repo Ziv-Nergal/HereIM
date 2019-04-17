@@ -76,7 +76,7 @@
                 tools:ignore="UnusedAttribute" />
 
             <Switch
-                android:id="@+id/chat_tool_bar_go_to_map_btn"
+                android:id="@+id/chat_tool_bar_go_to_map_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

@@ -1,20 +1,21 @@
 package activities;
 
 import android.content.Intent;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -22,28 +23,28 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
+import java.util.Map;
+
 import adapters.MessageAdapter;
 import de.hdodenhof.circleimageview.CircleImageView;
 import database_classes.GroupChat;
 import database_classes.Message;
 import firebase_utils.DatabaseManager;
+import fragments.MapsFragment;
 import gis.hereim.R;
+import utils.TypingTextWatcher;
 
 import static activities.MainActivity.GROUP_CHAT_INTENT_EXTRA_KEY;
 import static activities.MainActivity.sCurrentFirebaseUser;
 import static activities.MainActivity.sDatabaseManager;
 
-public class GroupChatActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class GroupChatActivity extends AppCompatActivity implements
+        SwipeRefreshLayout.OnRefreshListener, CompoundButton.OnCheckedChangeListener,
+        DatabaseManager.OnGroupNamesChangeListener, DatabaseManager.OnTypingStatusChangeListener {
 
     private GroupChat mCurrentGroup;
 
-    private EditText mMsgEditText;
-
-    private RecyclerView mMessagesRecyclerView;
-
-    private MessageAdapter mMessageAdapter;
-
-    private LinearLayoutManager mLinearLayoutManager;
+    private EditText mMessageET;
 
     private int mMessagesToRead = 20;
 
@@ -51,28 +52,21 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
 
     private String mGroupUserNames;
 
-    private TextView mGroupTypingUpdatesTextView;
+    private TextView mGroupChatHeaderTV;
+
+    private Switch mMapSwitch;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private long mDelay = 1000;
-    private long mLastTextEdit = 0;
+    private static Fragment mMapFragment = new MapsFragment();
 
-    private Handler mDelayHandler = new Handler();
-
-    private Runnable mStopTypingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (System.currentTimeMillis() > (mLastTextEdit + mDelay - 500)) {
-                sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId()).child("typing").setValue("nobody");
-            }
-        }
-    };
+    private static TypingTextWatcher mTypingTextWatcher;
 
     @Override
     protected void onPause() {
         super.onPause();
         sCurrentFirebaseUser.messageNotificationsDbRef().child(mCurrentGroup.getGroupId()).setValue(null);
+        stopListeningToChatEvents();
     }
 
     @Override
@@ -80,6 +74,7 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
         super.onStart();
         sCurrentFirebaseUser.messageNotificationsDbRef().child(mCurrentGroup.getGroupId()).setValue(null);
         sCurrentFirebaseUser.setIsOnline(true);
+        startListeningToChatEvents();
     }
 
     @Override
@@ -87,31 +82,40 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
         super.onCreate(savedInstanceState);
 
         if(sCurrentFirebaseUser.isLoggedIn()){
-            mCurrentGroup = (GroupChat)getIntent().getSerializableExtra(GROUP_CHAT_INTENT_EXTRA_KEY);
             setActivityUI();
-            startListeningToTypingEvents();
         } else{
             goToLoginPage();
         }
     }
 
     private void setActivityUI() {
-
         setContentView(R.layout.activity_group_chat);
 
-        setChatWallpaper();
+        mCurrentGroup = (GroupChat)getIntent().getSerializableExtra(GROUP_CHAT_INTENT_EXTRA_KEY);
 
-        mMsgEditText = findViewById(R.id.group_chat_message_edit_text);
-        mMessagesRecyclerView = findViewById(R.id.chat_messages_recycler_view);
+        mMessageET = findViewById(R.id.group_chat_message_edit_text);
         mSwipeRefreshLayout = findViewById(R.id.chat_swipe_layout);
+        mToolBar = findViewById(R.id.chat_tool_bar);
+        mMapSwitch = mToolBar.findViewById(R.id.chat_tool_bar_go_to_map_switch);
+        mGroupChatHeaderTV = mToolBar.findViewById(R.id.chat_tool_bar_group_members);
+
+        mTypingTextWatcher = new TypingTextWatcher(mCurrentGroup.getGroupId());
+
+        setChatWallpaper();
+        loadToolBarDetails();
+        loadMessagesToRecyclerView();
 
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        loadToolBarDetails();
-        loadMessagesToRecyclerView();
+        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                if(getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                    mMapSwitch.setChecked(false);
+                }
+            }
+        });
     }
-
-
 
     private void setChatWallpaper() {
 
@@ -143,7 +147,6 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
 
     private void loadToolBarDetails() {
 
-        mToolBar = findViewById(R.id.chat_tool_bar);
         setSupportActionBar(mToolBar);
 
         if(getSupportActionBar() != null){
@@ -151,64 +154,74 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        ((TextView)mToolBar.findViewById(R.id.chat_tool_bar_group_name)).setText(mCurrentGroup.getGroupName());
-        mGroupTypingUpdatesTextView = mToolBar.findViewById(R.id.chat_tool_bar_group_members);
+        ((TextView)mToolBar.findViewById(R.id.chat_tool_bar_group_name))
+                .setText(mCurrentGroup.getGroupName());
+
+        mMapSwitch.setOnCheckedChangeListener(this);
 
         sDatabaseManager.fetchGroupPhotoUrl(mCurrentGroup.getGroupId(), new DatabaseManager.FetchGroupPhotoCallback() {
             @Override
             public void onPhotoUrlFetched(final String photoUrl) {
-                Picasso.get().load(photoUrl).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile)
-                        .into(((CircleImageView)mToolBar.findViewById(R.id.chat_tool_bar_group_photo)), new Callback() {
+                Picasso.get().load(photoUrl)
+                        .networkPolicy(NetworkPolicy.OFFLINE)
+                        .placeholder(R.drawable.img_blank_profile)
+                        .into(((CircleImageView)mToolBar.findViewById(R.id.chat_tool_bar_group_photo)),
+                                new Callback() {
                     @Override
                     public void onSuccess() { }
 
                     @Override
                     public void onError(Exception e) {
-                        Picasso.get().load(photoUrl).placeholder(R.drawable.img_blank_profile).into(((CircleImageView)mToolBar.findViewById(R.id.chat_tool_bar_group_photo)));
+                        Picasso.get().load(photoUrl).placeholder(R.drawable.img_blank_profile)
+                                .into(((CircleImageView)mToolBar.findViewById(R.id.chat_tool_bar_group_photo)));
                     }
                 });
-            }
-        });
-
-        sDatabaseManager.fetchGroupUsersNameList(mCurrentGroup.getGroupId(), new DatabaseManager.OnGroupNamesChangeListener() {
-            @Override
-            public void onNamesChange(String names) {
-                mGroupUserNames = names;
-                mGroupTypingUpdatesTextView.setText(names);
             }
         });
     }
 
     private void loadMessagesToRecyclerView() {
 
-        FirebaseRecyclerOptions<Message> options = new FirebaseRecyclerOptions.Builder<Message>().setLifecycleOwner(this)
-                .setQuery(sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId())
-                        .child("messages").orderByChild("timeStamp").limitToLast(mMessagesToRead), Message.class).build();
+        final RecyclerView messagesRecyclerView = findViewById(R.id.chat_messages_recycler_view);
 
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        mLinearLayoutManager.setStackFromEnd(true);
+        final FirebaseRecyclerOptions<Message> options = new FirebaseRecyclerOptions.Builder<Message>().setLifecycleOwner(this)
+                .setQuery(sDatabaseManager.messagesDbRef().child(mCurrentGroup.getGroupId())
+                        .orderByChild("timeStamp").limitToLast(mMessagesToRead), Message.class).build();
 
-        mMessageAdapter = new MessageAdapter(options);
-        mMessageAdapter.startListening();
+        final RecyclerView.LayoutManager layoutManager = messagesRecyclerView.getLayoutManager();
 
-        mMessageAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+        messagesRecyclerView.setHasFixedSize(true);
+
+        sDatabaseManager.fetchGroupUsersDetails(mCurrentGroup, new DatabaseManager.FetchGroupUsersPhotosCallback() {
             @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-                mLinearLayoutManager.smoothScrollToPosition(mMessagesRecyclerView, null, mMessageAdapter.getItemCount());
-            }
-        });
+            public void onPhotosFetched(Map<String, String> usersNames, Map<String, String> photosUrls) {
 
-        mMessagesRecyclerView.setHasFixedSize(true);
-        mMessagesRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mMessagesRecyclerView.setAdapter(mMessageAdapter);
+                final MessageAdapter messageAdapter = new MessageAdapter(options, usersNames, photosUrls);
 
-        mMessagesRecyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View v, int left, int top, int right, final int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                if(bottom < oldBottom){
-                    mLinearLayoutManager.smoothScrollToPosition(mMessagesRecyclerView, null, bottom);
-                }
+                messageAdapter.startListening();
+
+                messageAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                    @Override
+                    public void onItemRangeInserted(int positionStart, int itemCount) {
+                        super.onItemRangeInserted(positionStart, itemCount);
+                        if (layoutManager != null) {
+                            layoutManager.smoothScrollToPosition(messagesRecyclerView, null, messageAdapter.getItemCount());
+                        }
+                    }
+                });
+
+                messagesRecyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right, final int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        if(bottom < oldBottom){
+                            if (layoutManager != null) {
+                                layoutManager.smoothScrollToPosition(messagesRecyclerView, null, bottom);
+                            }
+                        }
+                    }
+                });
+
+                messagesRecyclerView.setAdapter(messageAdapter);
             }
         });
     }
@@ -216,67 +229,29 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
     // Load previous messages to recyclerView
     @Override
     public void onRefresh() {
-
         mMessagesToRead *= 2;
-
-        FirebaseRecyclerOptions<Message> options = new FirebaseRecyclerOptions.Builder<Message>().setLifecycleOwner(this)
-                .setQuery(sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId())
-                        .child("messages").orderByChild("timeStamp").limitToLast(mMessagesToRead), Message.class).build();
-
-        mMessageAdapter.stopListening();
-        mMessageAdapter = new MessageAdapter(options);
-        mMessageAdapter.startListening();
-
-        mMessagesRecyclerView.setAdapter(mMessageAdapter);
-
+        loadMessagesToRecyclerView();
         mSwipeRefreshLayout.setRefreshing(false);
     }
 
-    private void startListeningToTypingEvents() {
+    private void startListeningToChatEvents() {
+        sDatabaseManager.listenToGroupUsersNamesChange(mCurrentGroup.getGroupId(), this);
+        sDatabaseManager.listenToTypingStatus(mCurrentGroup.getGroupId(), this);
+        mMessageET.addTextChangedListener(mTypingTextWatcher);
+    }
 
-        sDatabaseManager.listenToTypingStatus(mCurrentGroup.getGroupId(), new DatabaseManager.OnTypingStatusChangeListener() {
-            @Override
-            public void onSomeoneTyping(String name) {
-                String msgToDisplay = name + " " + getString(R.string.is_typing);
-                mGroupTypingUpdatesTextView.setText(msgToDisplay);
-            }
-
-            @Override
-            public void onNobodyIsTyping() {
-                mGroupTypingUpdatesTextView.setText(mGroupUserNames);
-            }
-        });
-
-        mMsgEditText.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (!TextUtils.isEmpty(s.toString()) && count > before) {
-                    sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId()).child("typing").setValue(sCurrentFirebaseUser.getFullName());
-                    mDelayHandler.removeCallbacks(mStopTypingRunnable);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if(s.length() > 0) {
-                    mLastTextEdit = System.currentTimeMillis();
-                    mDelayHandler.postDelayed(mStopTypingRunnable, mDelay);
-                }
-            }
-        });
+    private void stopListeningToChatEvents() {
+        sDatabaseManager.stopListeningToGroupUserNamesChange(mCurrentGroup.getGroupId());
+        sDatabaseManager.stopListeningToTypingStatus(mCurrentGroup.getGroupId());
+        mMessageET.removeTextChangedListener(mTypingTextWatcher);
     }
 
     public void sendMessageBtnClick(View view) {
-
-        String msg = mMsgEditText.getText().toString().trim();
+        String msg = mMessageET.getText().toString().trim();
 
         if(!TextUtils.isEmpty(msg)){
-            sDatabaseManager.sendMessageToGroup(mCurrentGroup.getGroupId(), msg);
-            mMsgEditText.setText("");
+            sDatabaseManager.sendMessageToGroup(mCurrentGroup, msg);
+            mMessageET.setText("");
         }
     }
 
@@ -288,6 +263,40 @@ public class GroupChatActivity extends AppCompatActivity implements SwipeRefresh
                         mToolBar.findViewById(R.id.chat_tool_bar_group_photo),
                         getString(R.string.group_info_transition));
         startActivity(groupChatIntent, options.toBundle());
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+
+        if(isChecked){
+            if(getSupportFragmentManager().getBackStackEntryCount() == 0){
+                transaction.add(R.id.map_container, mMapFragment).addToBackStack("map").commit();
+            } else {
+                transaction.show(mMapFragment).commit();
+            }
+        } else {
+            transaction.hide(mMapFragment).commit();
+        }
+    }
+
+    @Override
+    public void onGroupUserNamesChange(String names) {
+        mGroupUserNames = names;
+        mGroupChatHeaderTV.setText(names);
+    }
+
+    @Override
+    public void onSomeoneTyping(String name) {
+        String msgToDisplay = name + " " + getString(R.string.is_typing);
+        mGroupChatHeaderTV.setText(msgToDisplay);
+    }
+
+    @Override
+    public void onNobodyIsTyping() {
+        mGroupChatHeaderTV.setText(mGroupUserNames);
     }
 
     private void goToLoginPage() {

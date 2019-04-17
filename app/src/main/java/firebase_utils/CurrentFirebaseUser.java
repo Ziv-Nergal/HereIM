@@ -7,6 +7,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -14,6 +15,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -23,12 +26,13 @@ import utils.ColorParser;
 
 import static firebase_utils.DatabaseManager.NOTIFICATIONS_DB_REF_NAME;
 
-public class FirebaseUser {
+public class CurrentFirebaseUser {
 
-    private static FirebaseUser sInstance = null;
+    private static CurrentFirebaseUser sInstance = null;
+
+    private FirebaseUser mFirebaseUser;
 
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private com.google.firebase.auth.FirebaseUser mFirebaseUser;
 
     private DatabaseReference mCurrentUserDbRef;
     private DatabaseReference mCurrentUserGroupsDbRef;
@@ -41,17 +45,17 @@ public class FirebaseUser {
     private String mDeviceToken;
     private String mUserColor;
     private String mUserStatus;
-    private Uri mUserPhotoUri;
     private String mUserPhotoUrl;
+
     private boolean mIsOnline;
 
-    private FirebaseUser() {
+    private CurrentFirebaseUser() {
         initUser();
     }
 
-    public static FirebaseUser getInstance() {
+    public static CurrentFirebaseUser getInstance() {
         if (sInstance == null) {
-            sInstance = new FirebaseUser();
+            sInstance = new CurrentFirebaseUser();
         } else {
             sInstance.initUser();
         }
@@ -72,17 +76,14 @@ public class FirebaseUser {
             mMessageNotificationsDbRef = mCurrentUserDbRef.child(NOTIFICATIONS_DB_REF_NAME).child("messages");
             mGroupRequestsDbRef = mCurrentUserDbRef.child(NOTIFICATIONS_DB_REF_NAME).child("groupRequests");
 
-            mUserPhotoUri = mFirebaseUser.getPhotoUrl();
-            downloadUserPhoto();
-
             mFullName = mFirebaseUser.getDisplayName();
             mEmailAddress = mFirebaseUser.getEmail();
-            mDeviceToken = FirebaseInstanceId.getInstance().getToken();
-            mCurrentUserDbRef.child("deviceToken").setValue(mDeviceToken);
             mUserColor = ColorParser.Pars(mUid);
             mCurrentUserDbRef.child("online").onDisconnect().setValue(false);
 
-            retrieveUserStatus();
+            fetchUserPhoto();
+            fetchUserStatus();
+            updateDeviceToken();
         }
     }
 
@@ -102,7 +103,60 @@ public class FirebaseUser {
         return mGroupRequestsDbRef;
     }
 
-    private void downloadUserPhoto() {
+    public String getUserPhotoUrl() {
+        return mUserPhotoUrl;
+    }
+
+    public String getUid() {
+        return mUid;
+    }
+
+    public String getFullName() {
+        return mFullName;
+    }
+
+    public String getEmailAddress() {
+        return mEmailAddress;
+    }
+
+    String getUserColor() {
+        return mUserColor;
+    }
+
+    String getDeviceToken() {
+        return mDeviceToken;
+    }
+
+    public String getUserStatus() { return mUserStatus; }
+
+    GroupUser getFirebaseClassInstance(){
+        return new GroupUser(mUid, mDeviceToken, mEmailAddress, mFullName,
+                mIsOnline, mUserPhotoUrl, mUserStatus);
+    }
+
+    public void setFullName(String fullName) {
+        this.mFullName = fullName;
+        mCurrentUserDbRef.child("fullName").setValue(fullName);
+        mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder()
+                .setDisplayName(fullName).build());
+    }
+
+    public void setUserStatus(String userStatus) {
+        mUserStatus = userStatus;
+        mCurrentUserDbRef.child("status").setValue(userStatus);
+    }
+
+    void setDeviceToken(String mDeviceToken) {
+        this.mDeviceToken = mDeviceToken;
+        mCurrentUserDbRef.child("deviceToken").setValue(mDeviceToken);
+    }
+
+    public void setIsOnline(boolean iIsOnline) {
+        mIsOnline = iIsOnline;
+        mCurrentUserDbRef.child("online").setValue(iIsOnline);
+    }
+
+    private void fetchUserPhoto() {
         mCurrentUserDbRef.child("photoUri").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -113,13 +167,20 @@ public class FirebaseUser {
         });
     }
 
-    public void updatePhoto(Uri iUserPhotoUri) {
-        mUserPhotoUri = iUserPhotoUri;
-        mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder().setPhotoUri(iUserPhotoUri).build());
-        uploadUserPhoto(iUserPhotoUri);
+    private void fetchUserStatus() {
+        mCurrentUserDbRef.child("status").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                mUserStatus = dataSnapshot.getValue(String.class);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+        });
     }
 
-    private void uploadUserPhoto(Uri iUserPhotoUri) {
+    public void updatePhoto(Uri userPhotoUri) {
+        mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder().setPhotoUri(userPhotoUri).build());
 
         final StorageReference imageStorageRef = FirebaseStorage
                 .getInstance()
@@ -127,7 +188,7 @@ public class FirebaseUser {
                 .child("Profile_Images")
                 .child(mFirebaseUser.getUid() + ".jpg");
 
-        UploadTask uploadTask = imageStorageRef.putFile(iUserPhotoUri);
+        UploadTask uploadTask = imageStorageRef.putFile(userPhotoUri);
 
         uploadTask.addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -143,82 +204,15 @@ public class FirebaseUser {
         });
     }
 
-    String getUserPhotoUrl() {
-        return mUserPhotoUrl;
-    }
-
-    public Uri getUserPhotoUri() {
-        return mUserPhotoUri;
-    }
-
-    public String getUid() {
-        return mUid;
-    }
-
-    public String getFullName() {
-        return mFullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.mFullName = fullName;
-        mCurrentUserDbRef.child("fullName").setValue(fullName);
-    }
-
-    public String getEmailAddress() {
-        return mEmailAddress;
-    }
-
-    String getUserColor() {
-        return mUserColor;
-    }
-
-    String getDeviceToken() {
-        return mDeviceToken;
-    }
-
-    public String getUserStatus() {
-        return mUserStatus;
-    }
-
-    public void setUserStatus(String userStatus) {
-        this.mUserStatus = userStatus;
-        mCurrentUserDbRef.child("status").setValue(userStatus);
-    }
-
-    private void retrieveUserStatus() {
-        mCurrentUserDbRef.child("status").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                mUserStatus = dataSnapshot.getValue(String.class);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
-    }
-
-    GroupUser getFirebaseClassInstance(){
-
-        GroupUser me = new GroupUser();
-
-        me.setUid(mUid);
-        me.setDeviceToken(mDeviceToken);
-        me.setEmail(mEmailAddress);
-        me.setFullName(mFullName);
-        me.setOnline(mIsOnline);
-        me.setPhotoUri(mUserPhotoUrl);
-        me.setStatus(mUserStatus);
-
-        return me;
-    }
-
-    public boolean isOnline() {
-        return mIsOnline;
-    }
-
-    public void setIsOnline(boolean iIsOnline) {
-        mIsOnline = iIsOnline;
-        mCurrentUserDbRef.child("online").setValue(iIsOnline);
+    private void updateDeviceToken() {
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+                    @Override
+                    public void onSuccess(InstanceIdResult instanceIdResult) {
+                        mDeviceToken = instanceIdResult.getToken();
+                        mCurrentUserDbRef.child("deviceToken").setValue(mDeviceToken);
+                    }
+                });
     }
 
     public boolean isLoggedIn(){

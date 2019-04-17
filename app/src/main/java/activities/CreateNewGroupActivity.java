@@ -147,9 +147,9 @@ public class CreateNewGroupActivity extends AppCompatActivity implements FABProg
 
         fabProgressCircle.show();
 
-        sDatabaseManager.createNewGroup(groupName, mGroupPhotoUri, new DatabaseManager.OnGroupCreatedListener() {
+        sDatabaseManager.createNewGroup(groupName, mGroupPhotoUri, new DatabaseManager.GroupCreatedCallback() {
             @Override
-            public void onCreated(String groupId) {
+            public void onGroupCreated(String groupId) {
                 mCreatedGroupId = groupId;
                 ((TextView)findViewById(R.id.create_group_id_of_group)).setText(groupId);
                 fabProgressCircle.beginFinalAnimation();

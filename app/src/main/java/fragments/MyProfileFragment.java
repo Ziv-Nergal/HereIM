@@ -11,6 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -67,7 +70,19 @@ public class MyProfileFragment extends Fragment {
     }
 
     private void loadUserDetails() {
-        mUserProfilePhoto.setImageURI(sCurrentFirebaseUser.getUserPhotoUri());
+        Picasso.get().load(sCurrentFirebaseUser.getUserPhotoUrl())
+                .networkPolicy(NetworkPolicy.OFFLINE)
+                .placeholder(R.drawable.img_blank_profile).into(mUserProfilePhoto, new Callback() {
+            @Override
+            public void onSuccess() { }
+
+            @Override
+            public void onError(Exception e) {
+                Picasso.get().load(sCurrentFirebaseUser.getUserPhotoUrl())
+                        .placeholder(R.drawable.img_blank_profile).into(mUserProfilePhoto);
+            }
+        });
+
         mUserName.setText(sCurrentFirebaseUser.getFullName());
         mUserEmail.setText(sCurrentFirebaseUser.getEmailAddress());
         mUserStatus.setText(sCurrentFirebaseUser.getUserStatus());

@@ -27,7 +27,10 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/chat_messages_recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:stackFromEnd="true" />
+
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
@@ -82,5 +85,12 @@
             tools:ignore="ContentDescription" />
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/map_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/message_tools_layout"
+        android:layout_below="@+id/group_chat_tool_bar" />
 
 </RelativeLayout>

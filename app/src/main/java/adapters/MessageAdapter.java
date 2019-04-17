@@ -14,20 +14,31 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 import database_classes.Message;
 import gis.hereim.R;
 import utils.TimeStampParser;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
+import static activities.MainActivity.sDatabaseManager;
+import static activities.SignUpActivity.DEFAULT_PHOTO_URI;
 
 public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHolder<Message>> {
 
     private static final int VIEW_TYPE_MESSAGE_SENT = 1;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
-    public MessageAdapter(@NonNull FirebaseRecyclerOptions<Message> options) {
+    private Map<String, String> mUserNamesMap;
+    private Map<String, String> mUserPhotoUrlsMap;
+
+    public MessageAdapter(@NonNull FirebaseRecyclerOptions<Message> options,
+                          Map<String, String> userNames, Map<String, String> userPhotoUrls) {
         super(options);
+        mUserNamesMap = userNames;
+        mUserPhotoUrlsMap = userPhotoUrls;
     }
 
     @Override
@@ -35,7 +46,6 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
         Message mCurrentMsg = getItem(position);
         // Determines whether the message is a sent or a received message
         return mCurrentMsg.getSenderId().equals(sCurrentFirebaseUser.getUid()) ? VIEW_TYPE_MESSAGE_SENT : VIEW_TYPE_MESSAGE_RECEIVED;
-
     }
 
     @NonNull
@@ -82,22 +92,24 @@ public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHo
 
         @Override
         void bindView(final Message iMessage) {
-
             mMsgText.setText(iMessage.getMsgText());
             mMsgTime.setText(TimeStampParser.AccurateParse(iMessage.getTimeStamp()));
-            mSenderName.setText(iMessage.getSenderName());
+            mSenderName.setText(mUserNamesMap.get(iMessage.getSenderId()));
             mSenderName.setPaintFlags(mSenderName.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             mSenderName.setTextColor(Color.parseColor(iMessage.getSenderColor()));
 
-            Picasso.get().load(iMessage.getSenderPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
-                @Override
-                public void onSuccess() { }
+            if(mUserPhotoUrlsMap.containsKey(iMessage.getSenderId())){
+                Picasso.get().load(mUserPhotoUrlsMap.get(iMessage.getSenderId()))
+                        .networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
+                    @Override
+                    public void onSuccess() { }
 
-                @Override
-                public void onError(Exception e) {
-                    Picasso.get().load(iMessage.getSenderPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
-                }
-            });
+                    @Override
+                    public void onError(Exception e) {
+                        Picasso.get().load(iMessage.getSenderPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
+                    }
+                });
+            }
         }
     }
 

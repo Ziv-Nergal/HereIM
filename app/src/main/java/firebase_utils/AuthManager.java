@@ -43,7 +43,7 @@ public class AuthManager {
 
             switch (errorCode) {
                 case "ERROR_USER_NOT_FOUND": errorMsg = "No matching account found"; break;
-                case "ERROR_USER_DISABLED": errorMsg = "FirebaseUser account has been disabled"; break;
+                case "ERROR_USER_DISABLED": errorMsg = "CurrentFirebaseUser account has been disabled"; break;
                 default: errorMsg = exception.getLocalizedMessage();break;
             }
         }else if (exception instanceof FirebaseAuthUserCollisionException){

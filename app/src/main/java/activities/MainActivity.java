@@ -18,8 +18,8 @@ import android.view.MenuItem;
 
 import java.util.Objects;
 
+import firebase_utils.CurrentFirebaseUser;
 import firebase_utils.DatabaseManager;
-import firebase_utils.FirebaseUser;
 import fragments.GroupChatsFragment;
 import fragments.GroupRequestsFragment;
 import fragments.MyProfileFragment;
@@ -27,20 +27,14 @@ import fragments.SearchGroupsFragment;
 import gis.hereim.R;
 import utils.SoundFxManager;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DatabaseManager.GroupRequestStateListener {
 
     public static final String GROUP_CHAT_INTENT_EXTRA_KEY = "group_chat";
 
-    public static FirebaseUser sCurrentFirebaseUser;
+    public static CurrentFirebaseUser sCurrentFirebaseUser;
     public static DatabaseManager sDatabaseManager;
 
     private BottomNavigationView mBottomNavView;
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        ((NotificationManager) Objects.requireNonNull(getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE))).cancelAll();
-    }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -77,10 +71,23 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        ((NotificationManager) Objects.requireNonNull(getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE))).cancelAll();
+        sDatabaseManager.listenToGroupRequestNotification(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sDatabaseManager.stopListeningToGroupRequestNotification();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sCurrentFirebaseUser = FirebaseUser.getInstance();
+        sCurrentFirebaseUser = CurrentFirebaseUser.getInstance();
 
         if(sCurrentFirebaseUser.isLoggedIn()){
             sCurrentFirebaseUser.setIsOnline(true);
@@ -105,8 +112,6 @@ public class MainActivity extends AppCompatActivity {
         mBottomNavView = findViewById(R.id.bottom_navigation);
         mBottomNavView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        listenToGroupRequests();
-
         if(getIntent().getStringExtra("group_request") != null){
             getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container, new GroupRequestsFragment()).commit();
             mBottomNavView.setSelectedItemId(R.id.navigation_group_requests);
@@ -114,21 +119,6 @@ public class MainActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container, new GroupChatsFragment()).commit();
         }
 
-    }
-
-    private void listenToGroupRequests() {
-
-        sDatabaseManager.listenToGroupRequestNotification(new DatabaseManager.GroupRequestStateListener() {
-            @Override
-            public void onStateChanged(boolean haveGroupRequests) {
-
-                if(haveGroupRequests){
-                    mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications_accent);
-                } else {
-                    mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications);
-                }
-            }
-        });
     }
 
     @Override
@@ -173,6 +163,15 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         }).show();
+    }
+
+    @Override
+    public void onGroupRequestStateChanged(boolean haveGroupRequests) {
+        if(haveGroupRequests){
+            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications_accent);
+        } else {
+            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications);
+        }
     }
 
     private void goToLoginPage() {

@@ -66,7 +66,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.item_group_user, viewGroup, false);
 
-        return  new UserViewHolder(view);
+        return new UserViewHolder(view);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) { }
-        };
+       };
 
         viewHolder.setViewHolderId(user.getUid());
         mValueEventListenerMap.put(user.getUid(), groupUserValueEventListener);

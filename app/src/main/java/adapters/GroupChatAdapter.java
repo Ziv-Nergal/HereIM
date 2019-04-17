@@ -36,9 +36,6 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
 
     private static String sIsTypingMsg;
 
-    private static Map<String, ValueEventListener> sMsgNotificationsValueEventListenerMap = new HashMap<>();
-    private static Map<String, ValueEventListener> sTypingValueEventListenerMap = new HashMap<>();
-
     private static OnItemsCountChangeListener sItemsCountChangeListener;
 
     private static OnGroupChatClickListener sGroupChatClickListener;
@@ -89,31 +86,7 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
         groupChatViewHolder.bindView(groupChat);
     }
 
-    public void removeAllListeners() {
-
-        for (String groupId : sMsgNotificationsValueEventListenerMap.keySet()) {
-            sCurrentFirebaseUser.messageNotificationsDbRef().child(groupId).child("notificationCount")
-                    .removeEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(groupId)));
-        }
-
-        for (String groupId : sTypingValueEventListenerMap.keySet()) {
-            sDatabaseManager.groupChatsDbRef().child(groupId).child("typing")
-                    .removeEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(groupId)));
-        }
-    }
-
-    @Override
-    public void onViewDetachedFromWindow(@NonNull GroupChatViewHolder holder) {
-        super.onViewDetachedFromWindow(holder);
-
-        sCurrentFirebaseUser.messageNotificationsDbRef().child(holder.getViewHolderId()).child("notificationCount")
-                .removeEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(holder.getViewHolderId())));
-
-        sDatabaseManager.groupChatsDbRef().child(holder.getViewHolderId()).child("typing")
-                .removeEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(holder.getViewHolderId())));
-    }
-
-    static class GroupChatViewHolder extends BaseViewHolder<GroupChat> {
+    class GroupChatViewHolder extends BaseViewHolder<GroupChat> {
 
         private CircleImageView mGroupPhoto;
 
@@ -183,58 +156,32 @@ public class GroupChatAdapter extends FirebaseRecyclerAdapter<GroupChat, GroupCh
                 }
             });
 
-            listenToMessageNotifications(groupChat);
-            listenToUsersTypingEvents(groupChat);
-        }
-
-        private void listenToMessageNotifications(GroupChat groupChat) {
-
-            ValueEventListener notificationValueEventListener = new ValueEventListener() {
+            sDatabaseManager.listenToMessageNotifications(groupChat.getGroupId(), new DatabaseManager.MessageNotificationsListener() {
                 @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Integer notificationCount = dataSnapshot.getValue(Integer.class);
-
-                    if(notificationCount != null && notificationCount > 0) {
+                public void onGotNotification(int numOfNotifications) {
+                    if(numOfNotifications > 0) {
                         mNotificationsBubble.setVisibility(View.VISIBLE);
-                        mNotificationsBubble.setText(String.valueOf(notificationCount));
+                        mNotificationsBubble.setText(String.valueOf(numOfNotifications));
                     } else {
                         mNotificationsBubble.setVisibility(View.INVISIBLE);
                     }
                 }
+            });
 
+            sDatabaseManager.listenToTypingStatus(groupChat.getGroupId(), new DatabaseManager.OnTypingStatusChangeListener() {
                 @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) { }
-            };
-
-            sMsgNotificationsValueEventListenerMap.put(groupChat.getGroupId(), notificationValueEventListener);
-            sCurrentFirebaseUser.messageNotificationsDbRef().child(groupChat.getGroupId()).child("notificationCount")
-                    .addValueEventListener(Objects.requireNonNull(sMsgNotificationsValueEventListenerMap.get(groupChat.getGroupId())));
-        }
-
-        private void listenToUsersTypingEvents(final GroupChat groupChat) {
-
-            ValueEventListener typingEventListener = new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    String typingUserName = dataSnapshot.getValue(String.class);
-
-                    if(typingUserName != null && !typingUserName.equals(sCurrentFirebaseUser.getFullName()) && !typingUserName.equals("nobody")){
-                        String msgToDisplay = dataSnapshot.getValue(String.class) + " " +sIsTypingMsg;
-                        mLastMsg.setText(msgToDisplay);
-                        mLastMsg.setTextColor(sGreenTextColor);
-                    } else {
-                        mLastMsg.setText(groupChat.getLastMsg());
-                        mLastMsg.setTextColor(sDefaultTextColor);
-                    }
+                public void onSomeoneTyping(String name) {
+                    String msgToDisplay = name + " " +sIsTypingMsg;
+                    mLastMsg.setText(msgToDisplay);
+                    mLastMsg.setTextColor(sGreenTextColor);
                 }
 
                 @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) { }
-            };
-
-            sTypingValueEventListenerMap.put(groupChat.getGroupId(), typingEventListener);
-            sDatabaseManager.groupChatsDbRef().child(groupChat.getGroupId()).child("typing")
-                    .addValueEventListener(Objects.requireNonNull(sTypingValueEventListenerMap.get(groupChat.getGroupId())));
+                public void onNobodyIsTyping() {
+                    mLastMsg.setText(groupChat.getLastMsg());
+                    mLastMsg.setTextColor(sDefaultTextColor);
+                }
+            });
         }
     }
 }
