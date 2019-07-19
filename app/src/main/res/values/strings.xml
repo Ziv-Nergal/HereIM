@@ -149,5 +149,6 @@
     <string name="title_activity_maps">Map</string>
     <string name="permissions">This app needs to access your device location</string>
     <string name="permissions_denied">We need your permissions to access the map...</string>
+    <string name="no_location_msg">Something went wrong, please check your internet connection and location service and try again</string>
 
 </resources>

@@ -1,7 +1,9 @@
 package adapters;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +33,13 @@ import static activities.MainActivity.sDatabaseManager;
 
 public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseViewHolder<GroupUser>> {
 
+    public enum eViewTypes {
+        Group_Info_View,
+        Map_View
+    }
+
+    private eViewTypes mViewType;
+
     private Map<String, ValueEventListener> mValueEventListenerMap = new HashMap<>();
 
     private int mGreenColor;
@@ -41,32 +50,47 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
     private GroupChat mGroupChat;
 
-    private GroupUserAdapter.OnUserClickListener mRemoveUserClickListener;
+    private GroupUserAdapter.OnUserClickListener mUserClickListener;
 
     public interface OnUserClickListener {
-        void onRemoveUserClickGroupUser(GroupUser user);
+        void onClickGroupUser(GroupUser user);
     }
 
     public void setUserClickListener(OnUserClickListener removeUserClickListener) {
-        this.mRemoveUserClickListener = removeUserClickListener;
+        this.mUserClickListener = removeUserClickListener;
     }
 
-    public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options, GroupChat groupChat) {
+    public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options, GroupChat groupChat, eViewTypes viewType) {
         super(options);
         mGroupChat = groupChat;
         mGreenColor = context.getResources().getColor(R.color.green);
         mRedColor = context.getResources().getColor(R.color.colorAccent);
         mOnlineStr = context.getString(R.string.online);
         mOfflineStr = context.getString(R.string.offline);
+        mViewType = viewType;
     }
 
     @NonNull
     @Override
     public BaseViewHolder<GroupUser> onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.item_group_user, viewGroup, false);
 
-        return new UserViewHolder(view);
+        View view;
+        BaseViewHolder<GroupUser> viewHolder = null;
+
+        switch (mViewType) {
+            case Map_View:
+                view  = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(R.layout.item_map_user, viewGroup, false);
+                viewHolder = new MapUserViewHolder(view);
+                break;
+            case Group_Info_View:
+                view = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(R.layout.item_group_user, viewGroup, false);
+                viewHolder = new GroupUserViewHolder(view);
+                break;
+        }
+
+        return viewHolder;
     }
 
     @Override
@@ -97,7 +121,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         sDatabaseManager.usersDbRef().child(holder.getViewHolderId()).removeEventListener(Objects.requireNonNull(mValueEventListenerMap.get(holder.getViewHolderId())));
     }
 
-    private class UserViewHolder extends BaseViewHolder<GroupUser> {
+    private class GroupUserViewHolder extends BaseViewHolder<GroupUser> {
 
         private CircleImageView mUserPhoto;
         private TextView mUserName;
@@ -106,7 +130,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         private TextView mUserOnlineState;
         private ImageButton mRemoveUserBtn;
 
-        UserViewHolder(@NonNull View itemView) {
+        GroupUserViewHolder(@NonNull View itemView) {
             super(itemView);
             mUserPhoto = itemView.findViewById(R.id.user_cell_photo);
             mUserName = itemView.findViewById(R.id.user_item_name);
@@ -153,7 +177,48 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
             mRemoveUserBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mRemoveUserClickListener.onRemoveUserClickGroupUser(groupUser);
+                    mUserClickListener.onClickGroupUser(groupUser);
+                }
+            });
+        }
+    }
+
+    private class MapUserViewHolder extends BaseViewHolder<GroupUser> {
+
+        private CircleImageView mUserPhoto;
+        private TextView mUserName;
+
+        MapUserViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mUserPhoto = itemView.findViewById(R.id.item_map_user_photo);
+            mUserName = itemView.findViewById(R.id.item_map_user_name);
+        }
+
+        @Override
+        void bindView(final GroupUser groupUser) {
+
+            mUserName.setText(groupUser.getFullName());
+
+            if(groupUser.getOnline()){
+                mUserPhoto.setBorderColor(Color.GREEN);
+            } else {
+                mUserPhoto.setBorderColor(Color.RED);
+            }
+
+            Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
+                @Override
+                public void onSuccess() { }
+
+                @Override
+                public void onError(Exception e) {
+                    Picasso.get().load(groupUser.getPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
+                }
+            });
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mUserClickListener.onClickGroupUser(groupUser);
                 }
             });
         }

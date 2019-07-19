@@ -2,11 +2,11 @@ package activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
@@ -91,12 +91,13 @@ public class GroupChatInfoActivity extends AppCompatActivity {
                 .setQuery(sDatabaseManager.groupChatsDbRef().child(mCurrentGroup.getGroupId())
                         .child("groupUsers"), GroupUser.class).build();
 
-        final GroupUserAdapter userAdapter = new GroupUserAdapter(this, options, mCurrentGroup);
+        final GroupUserAdapter userAdapter = new GroupUserAdapter(this, options,
+                mCurrentGroup, GroupUserAdapter.eViewTypes.Group_Info_View);
         userAdapter.startListening();
 
         userAdapter.setUserClickListener(new GroupUserAdapter.OnUserClickListener() {
             @Override
-            public void onRemoveUserClickGroupUser(final GroupUser user) {
+            public void onClickGroupUser(final GroupUser user) {
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(GroupChatInfoActivity.this);
 

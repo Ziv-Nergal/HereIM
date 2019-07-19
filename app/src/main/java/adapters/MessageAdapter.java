@@ -2,7 +2,7 @@ package adapters;
 
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +14,6 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -23,8 +22,6 @@ import gis.hereim.R;
 import utils.TimeStampParser;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
-import static activities.MainActivity.sDatabaseManager;
-import static activities.SignUpActivity.DEFAULT_PHOTO_URI;
 
 public class MessageAdapter extends FirebaseRecyclerAdapter <Message, BaseViewHolder<Message>> {
 

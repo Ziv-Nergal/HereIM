@@ -2,15 +2,15 @@ package activities;
 
 import android.content.Intent;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -58,7 +58,7 @@ public class GroupChatActivity extends AppCompatActivity implements
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private static Fragment mMapFragment = new MapsFragment();
+    private static Fragment mMapFragment;
 
     private static TypingTextWatcher mTypingTextWatcher;
 
@@ -81,6 +81,9 @@ public class GroupChatActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mCurrentGroup = (GroupChat)getIntent().getSerializableExtra(GROUP_CHAT_INTENT_EXTRA_KEY);
+        mMapFragment = MapsFragment.newInstance(mCurrentGroup);
+
         if(sCurrentFirebaseUser.isLoggedIn()){
             setActivityUI();
         } else{
@@ -90,8 +93,6 @@ public class GroupChatActivity extends AppCompatActivity implements
 
     private void setActivityUI() {
         setContentView(R.layout.activity_group_chat);
-
-        mCurrentGroup = (GroupChat)getIntent().getSerializableExtra(GROUP_CHAT_INTENT_EXTRA_KEY);
 
         mMessageET = findViewById(R.id.group_chat_message_edit_text);
         mSwipeRefreshLayout = findViewById(R.id.chat_swipe_layout);
@@ -267,7 +268,10 @@ public class GroupChatActivity extends AppCompatActivity implements
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        toggleMapFragment(isChecked);
+    }
 
+    private void toggleMapFragment(boolean isChecked) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
 

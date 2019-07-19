@@ -1,7 +1,10 @@
 package firebase_utils;
 
+import android.content.Context;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -16,7 +19,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
-import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -202,6 +204,12 @@ public class CurrentFirebaseUser {
                 });
             }
         });
+    }
+
+    public void updateMyLocation(Location location, String addressLine) {
+        mCurrentUserDbRef.child("location").child("lat").setValue(location.getLatitude());
+        mCurrentUserDbRef.child("location").child("lng").setValue(location.getLongitude());
+        mCurrentUserDbRef.child("location").child("address").setValue(addressLine);
     }
 
     private void updateDeviceToken() {

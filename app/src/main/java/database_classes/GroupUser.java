@@ -10,9 +10,11 @@ public class GroupUser {
     private String deviceToken;
     private String email;
     private String fullName;
-    private boolean online;
     private String photoUri;
     private String status;
+    private UserLocation location;
+
+    private boolean online;
 
     public GroupUser() {}
 
@@ -52,6 +54,10 @@ public class GroupUser {
 
     public String getStatus() {
         return status;
+    }
+
+    public UserLocation getLocation() {
+        return location;
     }
 
     public void setUid(String uid) {

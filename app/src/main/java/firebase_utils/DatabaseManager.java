@@ -2,8 +2,8 @@ package firebase_utils;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 import database_classes.GroupChat;
 import database_classes.GroupUser;
@@ -33,6 +31,7 @@ import static activities.MainActivity.sDatabaseManager;
 
 public class DatabaseManager {
 
+    //region Constants
     private static final Uri DEFAULT_GROUP_PHOTO_URI =
             Uri.parse("android.resource://gis.hereim/drawable/img_blank_group_chat");
 
@@ -41,7 +40,9 @@ public class DatabaseManager {
     private static final String MESSAGES_DB_REF_NAME = "Messages";
 
     static final String NOTIFICATIONS_DB_REF_NAME = "Notifications";
+    //endregion
 
+    //region Class Members
     private static DatabaseManager sInstance = null;
 
     private DatabaseReference mUsersDbRef;
@@ -53,47 +54,6 @@ public class DatabaseManager {
     private static GroupRequestStateListener mGroupRequestStateListener;
 
     private static Map<String, ValueEventListener> mMessageValueEventListenerMap = new HashMap<>();
-
-    public interface MessageNotificationsListener {
-        void onGotNotification(int numOfNotifications);
-    }
-
-    public interface OnGroupNamesChangeListener {
-        void onGroupUserNamesChange(String names);
-    }
-
-    public interface OnTypingStatusChangeListener {
-        void onSomeoneTyping(String name);
-        void onNobodyIsTyping();
-    }
-
-    public interface GroupRequestStateListener {
-        void onGroupRequestStateChanged(boolean haveGroupRequests);
-    }
-
-    public interface GroupCreatedCallback {
-        void onGroupCreated(String groupId);
-    }
-
-    public interface GroupPhotoUploadedCallback {
-        void onPhotoUploaded();
-    }
-
-    public interface FetchGroupPhotoCallback {
-        void onPhotoUrlFetched(String photoUrl);
-    }
-    public interface FetchGroupChatCallback {
-        void onGroupChatFetched(GroupChat groupChat);
-    }
-
-    public interface FetchGroupUsersPhotosCallback {
-        void onPhotosFetched(Map<String, String> usersPhotosUrl, Map<String, String> photosUrls);
-    }
-
-    public interface GroupSearchCallback {
-        void groupFound(GroupChat groupChat);
-        void groupNotFound();
-    }
 
     private static ValueEventListener sGroupUserNamesValueListener = new ValueEventListener() {
         @Override
@@ -123,7 +83,6 @@ public class DatabaseManager {
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {}
     };
-
     private static ValueEventListener sTypingValueEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -140,7 +99,6 @@ public class DatabaseManager {
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {}
     };
-
     private static ValueEventListener sGroupRequestsValueEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -157,11 +115,58 @@ public class DatabaseManager {
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) { }
     };
+    //endregion
+
+    //region Listeners
+    public interface MessageNotificationsListener {
+        void onGotNotification(int numOfNotifications);
+    }
+
+    public interface OnGroupNamesChangeListener {
+        void onGroupUserNamesChange(String names);
+    }
+
+    public interface OnTypingStatusChangeListener {
+        void onSomeoneTyping(String name);
+        void onNobodyIsTyping();
+    }
+
+    public interface GroupRequestStateListener {
+        void onGroupRequestStateChanged(boolean haveGroupRequests);
+    }
+    //endregion
+
+    //region Callbacks
+    public interface GroupCreatedCallback {
+        void onGroupCreated(String groupId);
+    }
+
+    public interface GroupPhotoUploadedCallback {
+        void onPhotoUploaded();
+    }
+
+    public interface FetchGroupPhotoCallback {
+        void onPhotoUrlFetched(String photoUrl);
+    }
+    public interface FetchGroupChatCallback {
+        void onGroupChatFetched(GroupChat groupChat);
+    }
+
+    public interface FetchGroupUsersPhotosCallback {
+        void onPhotosFetched(Map<String, String> usersPhotosUrl, Map<String, String> photosUrls);
+    }
+
+    public interface GroupSearchCallback {
+        void groupFound(GroupChat groupChat);
+        void groupNotFound();
+    }
+    //endregion
 
     private DatabaseManager() {
         init();
     }
 
+    //region Methods
     private void init() {
         mUsersDbRef = FirebaseDatabase.getInstance().getReference().child(APP_USERS_DB_REF_NAME);
         mUsersDbRef.keepSynced(true);
@@ -408,13 +413,12 @@ public class DatabaseManager {
 
         Iterator iterator = mMessageValueEventListenerMap.entrySet().iterator();
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext())  {
             Map.Entry item = (Map.Entry) iterator.next();
 
             String id = item.getKey().toString();
 
-            ValueEventListener toRemove = mMessageValueEventListenerMap.get(item.getKey());
+            ValueEventListener toRemove = mMessageValueEventListenerMap.get(id);
 
             if(toRemove != null){
                 sCurrentFirebaseUser.messageNotificationsDbRef().child(id).child("notificationCount")
@@ -544,4 +548,5 @@ public class DatabaseManager {
         // Remove group key reference from my database
         sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupId).setValue(null);
     }
+    //endregion
 }
