@@ -15,11 +15,13 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/map_users_recycler_view"
-        android:alpha="0.5"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="-2dp"
+        android:background="@drawable/bg_map_users_recycler_view"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:orientation="horizontal"
-        android:layout_height="90dp"
-        android:layout_alignParentBottom="true" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>

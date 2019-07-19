@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
@@ -244,6 +245,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                         2000, null);
             }
         });
+
+        mUsersRecyclerView.addItemDecoration(new DividerItemDecoration(mUsersRecyclerView.getContext(),
+                DividerItemDecoration.HORIZONTAL));
 
         mUsersRecyclerView.setAdapter(userAdapter);
     }

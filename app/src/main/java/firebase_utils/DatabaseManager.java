@@ -469,16 +469,47 @@ public class DatabaseManager {
         });
     }
 
-    public void searchGroupById(final String groupId, final GroupSearchCallback callback) {
+    public void searchGroupById(final String searchString, final GroupSearchCallback callback) {
 
         mGroupChatsDbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.hasChild(groupId)){
-                    callback.groupFound(dataSnapshot.child(groupId).getValue(GroupChat.class));
-                } else {
-                    callback.groupNotFound();
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+
+                    String id = snapshot.getKey();
+
+                    if(id != null && id.contains(searchString)) {
+                        callback.groupFound(snapshot.getValue(GroupChat.class));
+                        return;
+                    }
                 }
+
+                //callback.groupNotFound();
+                searchGroupByName(searchString, callback);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+        });
+    }
+
+    private void searchGroupByName(final String searchString, final GroupSearchCallback callback) {
+        mGroupChatsDbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+
+                    String groupName = snapshot.child("groupName").getValue(String.class);
+
+                    if(groupName != null && groupName.contains(searchString)) {
+                        callback.groupFound(snapshot.getValue(GroupChat.class));
+                        return;
+                    }
+                }
+
+                callback.groupNotFound();
             }
 
             @Override

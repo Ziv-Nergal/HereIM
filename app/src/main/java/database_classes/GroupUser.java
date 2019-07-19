@@ -44,7 +44,7 @@ public class GroupUser {
         return fullName;
     }
 
-    public boolean getOnline() {
+    public boolean isOnline() {
         return online;
     }
 

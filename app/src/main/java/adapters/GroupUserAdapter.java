@@ -150,7 +150,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
             mUserName.setText(groupUser.getFullName());
             mUserStatus.setText(groupUser.getStatus());
 
-            if(groupUser.getOnline()){
+            if(groupUser.isOnline()){
                 mUserOnlineState.setText(mOnlineStr);
                 mUserOnlineState.setTextColor(mGreenColor);
             } else {
@@ -205,7 +205,7 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
             mUserName.setText(groupUser.getFullName());
 
-            if(groupUser.getOnline()){
+            if(groupUser.isOnline()){
                 mUserPhoto.setBorderColor(Color.GREEN);
             } else {
                 mUserPhoto.setBorderColor(Color.RED);
