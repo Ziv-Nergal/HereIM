@@ -31,7 +31,7 @@ import gis.hereim.R;
 import static activities.MainActivity.sCurrentFirebaseUser;
 import static activities.MainActivity.sDatabaseManager;
 
-public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseViewHolder<GroupUser>> {
+public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseViewHolder<GroupUser>>{
 
     public enum eViewTypes {
         Group_Info_View,
@@ -60,7 +60,8 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
         this.mUserClickListener = removeUserClickListener;
     }
 
-    public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options, GroupChat groupChat, eViewTypes viewType) {
+    public GroupUserAdapter(Context context, @NonNull FirebaseRecyclerOptions<GroupUser> options,
+                            GroupChat groupChat, eViewTypes viewType) {
         super(options);
         mGroupChat = groupChat;
         mGreenColor = context.getResources().getColor(R.color.green);
@@ -94,7 +95,8 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull final BaseViewHolder<GroupUser> viewHolder, int position, @NonNull GroupUser user) {
+    protected void onBindViewHolder(@NonNull final BaseViewHolder<GroupUser> viewHolder,
+                                    int position, @NonNull GroupUser user) {
 
         ValueEventListener groupUserValueEventListener = new ValueEventListener() {
             @Override
@@ -112,13 +114,15 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
         viewHolder.setViewHolderId(user.getUid());
         mValueEventListenerMap.put(user.getUid(), groupUserValueEventListener);
-        sDatabaseManager.usersDbRef().child(user.getUid()).addValueEventListener(groupUserValueEventListener);
+        sDatabaseManager.usersDbRef().child(user.getUid())
+                .addValueEventListener(groupUserValueEventListener);
     }
 
     @Override
     public void onViewDetachedFromWindow(@NonNull BaseViewHolder<GroupUser> holder) {
         super.onViewDetachedFromWindow(holder);
-        sDatabaseManager.usersDbRef().child(holder.getViewHolderId()).removeEventListener(Objects.requireNonNull(mValueEventListenerMap.get(holder.getViewHolderId())));
+        sDatabaseManager.usersDbRef().child(holder.getViewHolderId()).removeEventListener(
+                Objects.requireNonNull(mValueEventListenerMap.get(holder.getViewHolderId())));
     }
 
     private class GroupUserViewHolder extends BaseViewHolder<GroupUser> {
@@ -164,13 +168,15 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
                 }
             }
 
-            Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
+            Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE)
+                    .placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
                 @Override
                 public void onSuccess() { }
 
                 @Override
                 public void onError(Exception e) {
-                    Picasso.get().load(groupUser.getPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
+                    Picasso.get().load(groupUser.getPhotoUri())
+                            .placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
                 }
             });
 
@@ -205,13 +211,15 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
                 mUserPhoto.setBorderColor(Color.RED);
             }
 
-            Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE).placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
+            Picasso.get().load(groupUser.getPhotoUri()).networkPolicy(NetworkPolicy.OFFLINE)
+                    .placeholder(R.drawable.img_blank_profile).into(mUserPhoto, new Callback() {
                 @Override
                 public void onSuccess() { }
 
                 @Override
                 public void onError(Exception e) {
-                    Picasso.get().load(groupUser.getPhotoUri()).placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
+                    Picasso.get().load(groupUser.getPhotoUri())
+                            .placeholder(R.drawable.img_blank_profile).into(mUserPhoto);
                 }
             });
 

@@ -22,15 +22,18 @@ import firebase_utils.AuthManager;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    //region Constants
+    private final Handler mDelayHandler = new Handler();
+    private final FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    //endregion
 
+    //region Class Members
     private EditText mEmailET;
     private EditText mPasswordET;
-
     private ProgressBar mProgressBar;
+    //endregion
 
-    private final Handler mDelayHandler = new Handler();
-
+    //region Overrides
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +43,9 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordET = findViewById(R.id.login_password_edit_Text);
         mProgressBar = findViewById(R.id.login_progressbar);
     }
+    //endregion
 
+    //region Methods
     public void loginBtnClick(View view) {
 
         String email = mEmailET.getText().toString().trim();
@@ -54,6 +59,8 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    //______________________________________________________________________________________________
+
     private void signIn(final String email, final String password) {
 
         mProgressBar.setVisibility(View.VISIBLE);
@@ -65,20 +72,24 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            startActivity(new Intent(LoginActivity.this,
+                                    MainActivity.class));
                             finish();
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(LoginActivity.this, AuthManager.GetErrorMessage(e), Toast.LENGTH_LONG).show();
+                        Toast.makeText(LoginActivity.this, AuthManager.GetErrorMessage(e),
+                                Toast.LENGTH_LONG).show();
                         mProgressBar.setVisibility(View.INVISIBLE);
                     }
                 });
             }
         }, 1500);
     }
+
+    //______________________________________________________________________________________________
 
     public void signUpBtnCLick(View view) {
         Intent profileIntent = new Intent(LoginActivity.this, SignUpActivity.class);
@@ -88,4 +99,5 @@ public class LoginActivity extends AppCompatActivity {
                         getString(R.string.login_sign_up_trans));
         startActivity(profileIntent, options.toBundle());
     }
+    //endregion
 }

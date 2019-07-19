@@ -78,6 +78,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     public MapsFragment() { }
 
+    //______________________________________________________________________________________________
+
     public static MapsFragment newInstance(GroupChat groupChat) {
         Bundle args = new Bundle();
         args.putSerializable(GROUP_CHAT_INTENT_EXTRA_KEY, groupChat);
@@ -93,6 +95,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mContext = context;
     }
 
+    //______________________________________________________________________________________________
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -106,10 +110,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             mCurrentGroup = (GroupChat) getArguments().getSerializable(GROUP_CHAT_INTENT_EXTRA_KEY);
         }
 
-        showGroupMembersOnRecyclerView();
-
         if (!EasyPermissions.hasPermissions(mContext, LOCATION_PERMISSIONS)) {
-            EasyPermissions.requestPermissions(this, getString(R.string.permissions),
+            EasyPermissions.requestPermissions(this,
+                    getString(R.string.permissions),
                     RC_PERM, LOCATION_PERMISSIONS);
         } else {
             initGoogleMap();
@@ -118,11 +121,18 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         return fragmentView;
     }
 
+    //______________________________________________________________________________________________
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+        EasyPermissions.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults,
+                this);
 
         if (!EasyPermissions.hasPermissions(mContext, LOCATION_PERMISSIONS)) {
             closeFragment();
@@ -131,6 +141,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    //______________________________________________________________________________________________
+
     @Override
     @SuppressLint("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
@@ -138,6 +150,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mMap.setMyLocationEnabled(true);
         updateLastLocation();
         showGroupMembersOnMap();
+        showGroupMembersOnRecyclerView();
         mContext.startService(new Intent(mContext, LocationUpdateService.class));
     }
     //endregion
@@ -146,7 +159,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     private void updateLastLocation() {
 
-        LocationManager mLocationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager mLocationManager =
+                (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
 
         if (mLocationManager != null) {
 
@@ -169,23 +183,32 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
             if(lastLocation != null) {
                 updateCurrentLocation(lastLocation);
-                LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12), 3000, null);
+                LatLng latLng = new LatLng(mCurrentLocation.getLatitude(),
+                        mCurrentLocation.getLongitude());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12),
+                        3000, null);
             }
         } else {
-            Toast.makeText(mContext, R.string.no_location_msg, Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, R.string.no_location_msg,
+                    Toast.LENGTH_SHORT).show();
             closeFragment();
         }
     }
+
+    //______________________________________________________________________________________________
+
     private void closeFragment() {
         if (getActivity() != null) {
             FragmentManager supportFragmentManager;
             supportFragmentManager = getActivity().getSupportFragmentManager();
             supportFragmentManager.beginTransaction().remove(this).commit();
             supportFragmentManager.popBackStack();
-            Toast.makeText(mContext, getString(R.string.permissions_denied), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, getString(R.string.permissions_denied),
+                    Toast.LENGTH_SHORT).show();
         }
     }
+
+    //______________________________________________________________________________________________
 
     private void initGoogleMap() {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -195,6 +218,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             supportMapFragment.getMapAsync(MapsFragment.this);
         }
     }
+
+    //______________________________________________________________________________________________
 
     private void showGroupMembersOnRecyclerView() {
 
@@ -223,13 +248,18 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mUsersRecyclerView.setAdapter(userAdapter);
     }
 
+    //______________________________________________________________________________________________
+
     private void showGroupMembersOnMap() {
 
         for (final String groupUserId : mCurrentGroup.getGroupUsers().keySet()) {
 
-            if(groupUserId.equals(sCurrentFirebaseUser.getUid())) continue;
+            if(groupUserId.equals(sCurrentFirebaseUser.getUid())) {
+                continue;
+            }
 
-            sDatabaseManager.usersDbRef().child(groupUserId).addValueEventListener(new ValueEventListener() {
+            sDatabaseManager.usersDbRef().child(groupUserId)
+                    .addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
@@ -258,7 +288,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    private void addNewUserMarker(@NonNull DataSnapshot dataSnapshot, LatLng latLng, final String groupUserId) {
+    //______________________________________________________________________________________________
+
+    private void addNewUserMarker(@NonNull DataSnapshot dataSnapshot,
+                                  LatLng latLng, final String groupUserId) {
 
         GroupUser user = dataSnapshot.getValue(GroupUser.class);
 
@@ -289,6 +322,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             }
         });
     }
+
+    //______________________________________________________________________________________________
 
     private void updateCurrentLocation(Location location) {
 
