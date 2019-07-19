@@ -162,11 +162,14 @@ public class DatabaseManager {
     }
     //endregion
 
+    //region Methods
+
     private DatabaseManager() {
         init();
     }
 
-    //region Methods
+    //______________________________________________________________________________________________
+
     private void init() {
         mUsersDbRef = FirebaseDatabase.getInstance().getReference().child(APP_USERS_DB_REF_NAME);
         mUsersDbRef.keepSynced(true);
@@ -176,6 +179,8 @@ public class DatabaseManager {
         mGroupChatsDbRef.keepSynced(true);
     }
 
+    //______________________________________________________________________________________________
+
     public static DatabaseManager getInstance(){
         if(sInstance == null){
             sInstance = new DatabaseManager();
@@ -184,15 +189,23 @@ public class DatabaseManager {
         return sInstance;
     }
 
+    //______________________________________________________________________________________________
+
     public DatabaseReference usersDbRef() {
         return mUsersDbRef;
     }
+
+    //______________________________________________________________________________________________
 
     public DatabaseReference groupChatsDbRef() {
         return mGroupChatsDbRef;
     }
 
+    //______________________________________________________________________________________________
+
     public DatabaseReference messagesDbRef() { return mMessagesDbRef; }
+
+    //______________________________________________________________________________________________
 
     public void createNewGroup(String iGroupName, Uri iGroupPhotoUri, final GroupCreatedCallback callback){
 
@@ -233,6 +246,8 @@ public class DatabaseManager {
         }
     }
 
+    //______________________________________________________________________________________________
+
     public void addUserToGroup(final String userId, final String groupId) {
 
         mGroupChatsDbRef.child(groupId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -259,11 +274,15 @@ public class DatabaseManager {
         });
     }
 
-    // Remember to finish this!
+    //______________________________________________________________________________________________
+
+    // TODO - Check if group is empty
     public void removeUserFromGroup(final String userId, final String groupId) {
         mGroupChatsDbRef.child(groupId).child("groupUsers").child(userId).setValue(null);
         mUsersDbRef.child(userId).child("groups").child(groupId).setValue(null);
     }
+
+    //______________________________________________________________________________________________
 
     public void uploadGroupPhoto(Uri iGroupPhoto, final String iGroupId, final GroupPhotoUploadedCallback callback) {
 
@@ -288,6 +307,8 @@ public class DatabaseManager {
             }
         });
     }
+
+    //______________________________________________________________________________________________
 
     public void sendMessageToGroup(final GroupChat groupChat, final String msg){
 
@@ -327,7 +348,10 @@ public class DatabaseManager {
         }
     }
 
-    private void notifyGroupUsers(GroupChat groupChat, final String msgContent, final Map<String, String> timeStamp) {
+    //______________________________________________________________________________________________
+
+    private void notifyGroupUsers(GroupChat groupChat, final String msgContent,
+                                  final Map<String, String> timeStamp) {
 
         final Map<String, Object> notificationDetailsMap = new HashMap<>();
 
@@ -372,6 +396,8 @@ public class DatabaseManager {
         }
     }
 
+    //______________________________________________________________________________________________
+
     public void fetchGroupById(String groupId, final FetchGroupChatCallback callback) {
 
         mGroupChatsDbRef.child(groupId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -385,7 +411,10 @@ public class DatabaseManager {
         });
     }
 
-    public void listenToMessageNotifications(String groupId, final MessageNotificationsListener listener) {
+    //______________________________________________________________________________________________
+
+    public void listenToMessageNotifications(String groupId,
+                                             final MessageNotificationsListener listener) {
 
         ValueEventListener messageListener = new ValueEventListener() {
             @Override
@@ -409,6 +438,8 @@ public class DatabaseManager {
                 .addValueEventListener(messageListener);
     }
 
+    //______________________________________________________________________________________________
+
     public void stopListeningToMessageNotifications() {
 
         Iterator iterator = mMessageValueEventListenerMap.entrySet().iterator();
@@ -428,32 +459,45 @@ public class DatabaseManager {
         }
     }
 
+    //______________________________________________________________________________________________
     public void listenToGroupUsersNamesChange(String groupId, final OnGroupNamesChangeListener listener){
         mGroupNamesChangeListener = listener;
         mGroupChatsDbRef.child(groupId).child("groupUsers").addValueEventListener(sGroupUserNamesValueListener);
     }
 
+    //______________________________________________________________________________________________
+
     public void stopListeningToGroupUserNamesChange(String groupId) {
         mGroupChatsDbRef.child(groupId).child("groupUsers").removeEventListener(sGroupUserNamesValueListener);
     }
+
+    //______________________________________________________________________________________________
 
     public void listenToTypingStatus(String groupId, final OnTypingStatusChangeListener listener) {
         mTypingStatusChangeListener = listener;
         mGroupChatsDbRef.child(groupId).child("typing").addValueEventListener(sTypingValueEventListener);
     }
 
+    //______________________________________________________________________________________________
+
     public void stopListeningToTypingStatus(String groupId) {
         mGroupChatsDbRef.child(groupId).child("typing").removeEventListener(sTypingValueEventListener);
     }
-//
+
+    //______________________________________________________________________________________________
+
     public void listenToGroupRequestNotification(final GroupRequestStateListener listener) {
         mGroupRequestStateListener = listener;
         sCurrentFirebaseUser.currentUserDbRef().addValueEventListener(sGroupRequestsValueEventListener);
     }
 
+    //______________________________________________________________________________________________
+
     public void stopListeningToGroupRequestNotification() {
         sCurrentFirebaseUser.currentUserDbRef().removeEventListener(sGroupRequestsValueEventListener);
     }
+
+    //______________________________________________________________________________________________
 
     public void fetchGroupPhotoUrl(String groupId, final FetchGroupPhotoCallback callback) {
 
@@ -468,6 +512,8 @@ public class DatabaseManager {
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
+
+    //______________________________________________________________________________________________
 
     public void searchGroupById(final String searchString, final GroupSearchCallback callback) {
 
@@ -485,7 +531,6 @@ public class DatabaseManager {
                     }
                 }
 
-                //callback.groupNotFound();
                 searchGroupByName(searchString, callback);
             }
 
@@ -493,6 +538,8 @@ public class DatabaseManager {
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
+
+    //______________________________________________________________________________________________
 
     private void searchGroupByName(final String searchString, final GroupSearchCallback callback) {
         mGroupChatsDbRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -517,6 +564,8 @@ public class DatabaseManager {
         });
     }
 
+    //______________________________________________________________________________________________
+
     public void sendGroupRequest(GroupChat groupChat) {
 
         Map<String, Object> requestDetails = new HashMap<>();
@@ -534,6 +583,8 @@ public class DatabaseManager {
         mUsersDbRef.child(groupChat.getAdminId()).child(NOTIFICATIONS_DB_REF_NAME).child("groupRequests")
                 .child(sCurrentFirebaseUser.getUid()).updateChildren(requestDetails);
     }
+
+    //______________________________________________________________________________________________
 
     public void fetchGroupUsersDetails(GroupChat groupChat, FetchGroupUsersPhotosCallback callback) {
 
@@ -564,6 +615,8 @@ public class DatabaseManager {
 
         callback.onPhotosFetched(userNames, usersPhotosUrl);
     }
+
+    //______________________________________________________________________________________________
 
     public void leaveGroup(String groupId) {
 
