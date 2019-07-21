@@ -12,6 +12,8 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -73,7 +75,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseManager.G
     @Override
     protected void onStart() {
         super.onStart();
-        ((NotificationManager) Objects.requireNonNull(getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE))).cancelAll();
+        ((NotificationManager) Objects.requireNonNull(getApplicationContext()
+                .getSystemService(Context.NOTIFICATION_SERVICE))).cancelAll();
         sDatabaseManager.listenToGroupRequestNotification(this);
     }
 
@@ -113,10 +116,12 @@ public class MainActivity extends AppCompatActivity implements DatabaseManager.G
         mBottomNavView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         if(getIntent().getStringExtra("group_request") != null){
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container, new GroupRequestsFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container,
+                    new GroupRequestsFragment()).commit();
             mBottomNavView.setSelectedItemId(R.id.navigation_group_requests);
         } else {
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container, new GroupChatsFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment_container,
+                    new GroupChatsFragment()).commit();
         }
 
     }
@@ -168,9 +173,11 @@ public class MainActivity extends AppCompatActivity implements DatabaseManager.G
     @Override
     public void onGroupRequestStateChanged(boolean haveGroupRequests) {
         if(haveGroupRequests){
-            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications_accent);
+            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests)
+                    .setIcon(R.drawable.ic_bottom_nav_notifications_accent);
         } else {
-            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests).setIcon(R.drawable.ic_bottom_nav_notifications);
+            mBottomNavView.getMenu().findItem(R.id.navigation_group_requests)
+                    .setIcon(R.drawable.ic_bottom_nav_notifications);
         }
     }
 

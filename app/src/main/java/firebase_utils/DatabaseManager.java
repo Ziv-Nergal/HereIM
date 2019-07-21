@@ -25,7 +25,9 @@ import java.util.Map;
 
 import database_classes.GroupChat;
 import database_classes.GroupUser;
+import database_classes.UserLocation;
 
+import static activities.GroupChatInfoActivity.MINIMUM_DISTANCE_FROM_ADMIN;
 import static activities.MainActivity.sCurrentFirebaseUser;
 import static activities.MainActivity.sDatabaseManager;
 
@@ -134,6 +136,10 @@ public class DatabaseManager {
     public interface GroupRequestStateListener {
         void onGroupRequestStateChanged(boolean haveGroupRequests);
     }
+
+    public interface UserLocationListener {
+        void onLocationFetched(GroupUser user);
+    }
     //endregion
 
     //region Callbacks
@@ -156,14 +162,25 @@ public class DatabaseManager {
         void onPhotosFetched(Map<String, String> usersPhotosUrl, Map<String, String> photosUrls);
     }
 
+    public interface FetchGroupDistanceFromAdminCallback {
+        void onDistanceFetched(int distance);
+    }
+
+    public interface FetchUserCallback {
+        void onUserFetched(GroupUser user);
+    }
+
     public interface GroupSearchCallback {
         void groupFound(GroupChat groupChat);
         void groupNotFound();
     }
+
+    public interface FetchLocationSharingStatusCallback {
+        void onStatusFetched(boolean status);
+    }
     //endregion
 
     //region Methods
-
     private DatabaseManager() {
         init();
     }
@@ -222,6 +239,7 @@ public class DatabaseManager {
             groupDetails.put("adminDeviceToken", sCurrentFirebaseUser.getDeviceToken());
             groupDetails.put("lastMsg", sCurrentFirebaseUser.getFullName() + " Created the group");
             groupDetails.put("groupPhoto", DEFAULT_GROUP_PHOTO_URI.toString());
+            groupDetails.put("allowedDistanceFromAdmin", MINIMUM_DISTANCE_FROM_ADMIN);
             groupDetails.put("timeStamp", ServerValue.TIMESTAMP);
 
             // Adding group details to groups database reference
@@ -231,7 +249,8 @@ public class DatabaseManager {
             sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupId).updateChildren(groupDetails);
 
             // Adding myself as a member of the group
-            mGroupChatsDbRef.child(groupId).child("groupUsers").child(sCurrentFirebaseUser.getUid()).setValue(sCurrentFirebaseUser.getFirebaseClassInstance());
+            mGroupChatsDbRef.child(groupId).child("groupUsers").child(sCurrentFirebaseUser.getUid())
+                    .setValue(sCurrentFirebaseUser.getFirebaseClassInstance());
 
             if(iGroupPhotoUri != null){
                 uploadGroupPhoto(iGroupPhotoUri, groupId, new GroupPhotoUploadedCallback() {
@@ -334,13 +353,23 @@ public class DatabaseManager {
                         @Override
                         public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
 
-                            // Update group last msg content and timeStamp to this msg content and timeStamp
-                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
-                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
+                            // Update group last msg content and timeStamp to
+                            // this msg content and timeStamp
+                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("lastMsg")
+                                    .setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
+                            mGroupChatsDbRef.child(groupChat.getGroupId()).child("timeStamp")
+                                    .setValue(timeStamp);
 
-                            // Update group last msg content and timeStamp on my groups node because the groups are sorted by my group nodes
-                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
-                            sCurrentFirebaseUser.currentUserGroupsDbRef().child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
+                            // Update group last msg content and timeStamp on my groups
+                            // node because the groups are sorted by my group nodes
+                            sCurrentFirebaseUser.currentUserGroupsDbRef()
+                                    .child(groupChat.getGroupId())
+                                    .child("lastMsg")
+                                    .setValue(sCurrentFirebaseUser.getFullName() + ": " + msg);
+                            sCurrentFirebaseUser.currentUserGroupsDbRef().
+                                    child(groupChat.getGroupId())
+                                    .child("timeStamp")
+                                    .setValue(timeStamp);
 
                             notifyGroupUsers(groupChat, msg, timeStamp);
                         }
@@ -364,18 +393,31 @@ public class DatabaseManager {
         for (String userToSendToId : groupChat.getGroupUsers().keySet()) {
 
             // Get the node of the message notifications of the user that you want to notify
-            final DatabaseReference notificationRef = mUsersDbRef.child(userToSendToId).child(NOTIFICATIONS_DB_REF_NAME).child("messages").child(groupChat.getGroupId());
+            final DatabaseReference notificationRef = mUsersDbRef
+                    .child(userToSendToId)
+                    .child(NOTIFICATIONS_DB_REF_NAME)
+                    .child("messages")
+                    .child(groupChat.getGroupId());
 
             // Update the msg content and timeStamp on the user groups node because the groups are sorted by my group nodes
-            mUsersDbRef.child(userToSendToId).child("groups").child(groupChat.getGroupId()).child("lastMsg").setValue(sCurrentFirebaseUser.getFullName() + ": " + msgContent);
-            mUsersDbRef.child(userToSendToId).child("groups").child(groupChat.getGroupId()).child("timeStamp").setValue(timeStamp);
+            mUsersDbRef.child(userToSendToId)
+                    .child("groups")
+                    .child(groupChat.getGroupId())
+                    .child("lastMsg")
+                    .setValue(sCurrentFirebaseUser.getFullName() + ": " + msgContent);
+            mUsersDbRef.child(userToSendToId)
+                    .child("groups")
+                    .child(groupChat.getGroupId())
+                    .child("timeStamp")
+                    .setValue(timeStamp);
 
             final String notificationId = notificationRef.push().getKey();
 
             // Make sure to not notify yourself
             if (notificationId != null && !userToSendToId.equals(sCurrentFirebaseUser.getUid())) {
 
-                mUsersDbRef.child(userToSendToId).child("deviceToken").addListenerForSingleValueEvent(new ValueEventListener() {
+                mUsersDbRef.child(userToSendToId).child("deviceToken")
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
@@ -501,7 +543,8 @@ public class DatabaseManager {
 
     public void fetchGroupPhotoUrl(String groupId, final FetchGroupPhotoCallback callback) {
 
-        mGroupChatsDbRef.child(groupId).child("groupPhoto").addListenerForSingleValueEvent(new ValueEventListener() {
+        mGroupChatsDbRef.child(groupId).child("groupPhoto")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -580,7 +623,9 @@ public class DatabaseManager {
         requestDetails.put("senderPhoto", sCurrentFirebaseUser.getUserPhotoUrl());
 
         // Create a group request node in the group's admin database
-        mUsersDbRef.child(groupChat.getAdminId()).child(NOTIFICATIONS_DB_REF_NAME).child("groupRequests")
+        mUsersDbRef.child(groupChat.getAdminId())
+                .child(NOTIFICATIONS_DB_REF_NAME)
+                .child("groupRequests")
                 .child(sCurrentFirebaseUser.getUid()).updateChildren(requestDetails);
     }
 
@@ -618,10 +663,84 @@ public class DatabaseManager {
 
     //______________________________________________________________________________________________
 
+    public void fetchGroupDistanceFromAdmin(GroupChat groupChat,
+                                            final FetchGroupDistanceFromAdminCallback callback) {
+
+        mGroupChatsDbRef.child(groupChat.getGroupId()).child("allowedDistanceFromAdmin")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()) {
+                            long dist = (long)dataSnapshot.getValue();
+                            callback.onDistanceFetched((int)dist);
+                        } else {
+                            callback.onDistanceFetched(MINIMUM_DISTANCE_FROM_ADMIN);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
+    }
+
+    //______________________________________________________________________________________________
+
+    public void listenToUserLocation(String userId, final UserLocationListener callback) {
+
+        mUsersDbRef.child(userId).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.child("location").exists()) {
+                            GroupUser user = dataSnapshot.getValue(GroupUser.class);
+                            callback.onLocationFetched(user);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
+    }
+
+    //______________________________________________________________________________________________
+
+    public void fetchUser(String userId, final FetchUserCallback callback) {
+
+        mUsersDbRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        callback.onUserFetched(dataSnapshot.getValue(GroupUser.class));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
+    }
+
+    //______________________________________________________________________________________________
+
+    public void fetchUserLocationSharingStatus(String userId,
+                                               final FetchLocationSharingStatusCallback callback) {
+        mUsersDbRef.child(userId).child("isSharingLocation")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()) {
+                            callback.onStatusFetched((boolean)dataSnapshot.getValue());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
+    }
+
+    //______________________________________________________________________________________________
+
     public void leaveGroup(String groupId) {
 
         // Remove myself from group database
-        sDatabaseManager.groupChatsDbRef().child(groupId).child("groupUsers").child(sCurrentFirebaseUser.getUid()).setValue(null);
+        sDatabaseManager.groupChatsDbRef().child(groupId).child("groupUsers")
+                .child(sCurrentFirebaseUser.getUid()).setValue(null);
 
         // Remove all message notifications from this group from my database
         sCurrentFirebaseUser.messageNotificationsDbRef().child(groupId).setValue(null);

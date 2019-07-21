@@ -1,6 +1,8 @@
 package fragments;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,12 +14,19 @@ import android.location.LocationManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
+
+import android.os.Build;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Vibrator;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,9 +42,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
@@ -48,10 +54,12 @@ import adapters.GroupUserAdapter;
 import database_classes.GroupChat;
 import database_classes.GroupUser;
 import database_classes.UserLocation;
+import firebase_utils.DatabaseManager;
 import gis.hereim.R;
 import pub.devrel.easypermissions.EasyPermissions;
 import utils.CircleTransform;
-import utils.LocationUpdateService;
+import location_utils.LocationUpdateService;
+import utils.SoundFxManager;
 
 import static activities.MainActivity.GROUP_CHAT_INTENT_EXTRA_KEY;
 import static activities.MainActivity.sCurrentFirebaseUser;
@@ -64,14 +72,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     private static final String[] LOCATION_PERMISSIONS = {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION};
-
+    private static final float MAP_MARKERS_TRANSPARENCY = 0.7f;
     private static final int RC_PERM = 124;
+    private static final String NOTIFICATION_CHANNEL_ID = "HERE_I_AM_LOCATION_VIOLATION";
     //endregion
 
     //region Class Members
+    public static Location mCurrentLocation;
     private Context mContext;
     private GoogleMap mMap;
-    private Location mCurrentLocation;
     private GroupChat mCurrentGroup;
     private Map<String, Marker> mMarkers = new HashMap<>();
     private RecyclerView mUsersRecyclerView;
@@ -239,10 +248,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         userAdapter.setUserClickListener(new GroupUserAdapter.OnUserClickListener() {
             @Override
             public void onClickGroupUser(final GroupUser user) {
-                UserLocation location = user.getLocation();
-                LatLng latLng = new LatLng(location.getLat(), location.getLng());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18),
-                        2000, null);
+                if(user.getIsSharingLocation()){
+                    UserLocation location = user.getLocation();
+                    LatLng latLng = new LatLng(location.getLat(), location.getLng());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18),
+                            2000, null);
+                }
             }
         });
 
@@ -262,67 +273,139 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 continue;
             }
 
-            sDatabaseManager.usersDbRef().child(groupUserId)
-                    .addValueEventListener(new ValueEventListener() {
+            sDatabaseManager.listenToUserLocation(groupUserId,
+                    new DatabaseManager.UserLocationListener() {
                 @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                public void onLocationFetched(GroupUser user) {
 
-                    if(dataSnapshot.child("location").exists()) {
+                    if(mMarkers.containsKey(groupUserId)) {
 
-                        double lat = (double)dataSnapshot.child("location").child("lat").getValue();
-                        double lng = (double)dataSnapshot.child("location").child("lng").getValue();
-                        LatLng latLng = new LatLng(lat, lng);
+                        Marker markerToUpdate = mMarkers.get(groupUserId);
 
-                        if(mMarkers.containsKey(groupUserId)) {
-
-                            Marker markerToUpdate = mMarkers.get(groupUserId);
-
-                            if(markerToUpdate != null) {
-                                markerToUpdate.setPosition(latLng);
-                            }
+                        if (user.getIsSharingLocation()) {
+                            markerToUpdate.setVisible(true);
                         } else {
-                            addNewUserMarker(dataSnapshot, latLng, groupUserId);
+                            markerToUpdate.setVisible(false);
                         }
+
+                        markerToUpdate.setPosition(user.getLocation().getLatLng());
+                    } else {
+                        addNewUserMarker(user, groupUserId);
+                    }
+
+                    // If i am the admin of the group BOOM BOOM CHAKALAKA
+                    if(mCurrentGroup.getAdminId().equals(sCurrentFirebaseUser.getUid())) {
+                        checkForDistanceViolation(user.getLocation(), groupUserId);
                     }
                 }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
             });
         }
     }
 
     //______________________________________________________________________________________________
 
-    private void addNewUserMarker(@NonNull DataSnapshot dataSnapshot,
-                                  LatLng latLng, final String groupUserId) {
+    private void checkForDistanceViolation(UserLocation groupUserLocation, String groupUserId) {
 
-        GroupUser user = dataSnapshot.getValue(GroupUser.class);
+        float[] results = new float[1];
+        Location.distanceBetween(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude(),
+                groupUserLocation.getLat(), groupUserLocation.getLng(), results);
 
-        if(user == null) {
-            return;
-        }
+        long resultInMeters = (long)results[0] / 1000;
 
-        final MarkerOptions options = new MarkerOptions().alpha(0.7f).position(latLng)
-                .title(user.getFullName());
+        if(resultInMeters > mCurrentGroup.getAllowedDistanceFromAdmin()) {
 
-        final ImageView userImg = new ImageView(mContext);
+            Log.e("DISTANCE_VIOLATION", "Distance found: " + results[0]);
 
-        Picasso.get().load(user.getPhotoUri())
-                .resize(100, 100)
-                .transform(new CircleTransform())
-                .networkPolicy(NetworkPolicy.OFFLINE)
-                .placeholder(R.drawable.img_blank_profile).into(userImg, new Callback() {
-            @Override
-            public void onSuccess() {
-                Bitmap bitmap = ((BitmapDrawable)userImg.getDrawable()).getBitmap();
-                options.icon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                mMarkers.put(groupUserId, mMap.addMarker(options));
+            Vibrator vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+
+            if (vibrator != null) {
+                vibrator.vibrate(100);
             }
 
+            if(PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext())
+                    .getBoolean("pref_notification_sound", true)) {
+                SoundFxManager.PlaySoundFx(SoundFxManager.eSoundEffect.DISTANCE_ALERT);
+            }
+
+            HashMap<String, String> users =
+                    (HashMap<String, String>)mCurrentGroup.getGroupUsers().get(groupUserId);
+
+            String userName = users.get("fullName");
+
+            NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(mContext, NOTIFICATION_CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_app_logo_color_primary)
+                    .setContentTitle(mCurrentGroup.getGroupName())
+                    .setContentText(userName + " Is Out Of Range!!!")
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mContext);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel();
+            }
+
+            notificationManager.notify(0, builder.build());
+        }
+    }
+
+    //______________________________________________________________________________________________
+
+    private void createNotificationChannel() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel =
+                    new NotificationChannel(NOTIFICATION_CHANNEL_ID,"Distance Alert" , importance);
+            channel.setDescription("When a user steps out of the defined boundary in map");
+
+            NotificationManager notificationManager =
+                    mContext.getSystemService(NotificationManager.class);
+
+            if(notificationManager != null){
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    //______________________________________________________________________________________________
+
+    private void addNewUserMarker(final GroupUser groupUser, final String groupUserId) {
+
+        sDatabaseManager.fetchUser(groupUserId, new DatabaseManager.FetchUserCallback() {
             @Override
-            public void onError(Exception e) {
-                mMarkers.put(groupUserId, mMap.addMarker(options));
+            public void onUserFetched(final GroupUser user) {
+                final MarkerOptions options = new MarkerOptions()
+                        .alpha(MAP_MARKERS_TRANSPARENCY)
+                        .position(groupUser.getLocation().getLatLng())
+                        .title(user.getFullName());
+
+                final ImageView userImg = new ImageView(mContext);
+
+                Picasso.get().load(user.getPhotoUri())
+                        .resize(100, 100)
+                        .transform(new CircleTransform())
+                        .networkPolicy(NetworkPolicy.OFFLINE)
+                        .placeholder(R.drawable.img_blank_profile).into(userImg, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        Bitmap bitmap = ((BitmapDrawable)userImg.getDrawable()).getBitmap();
+                        options.icon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                        Marker marker = mMap.addMarker(options);
+
+                        if(!user.getIsSharingLocation()) {
+                            marker.setVisible(false);
+                        }
+
+                        mMarkers.put(groupUserId, marker);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        mMarkers.put(groupUserId, mMap.addMarker(options));
+                    }
+                });
             }
         });
     }

@@ -17,19 +17,8 @@ public class GroupChat implements Serializable {
     private String lastMsg;
     private String groupPhoto;
     private long timeStamp;
+    private long allowedDistanceFromAdmin;
     private Map<String, Object> groupUsers;
-
-    public GroupChat(String groupId, String adminId, String adminName, String adminDeviceToken, String groupName, String lastMsg, String groupPhoto, long timeStamp, Map<String, Object> groupUsers) {
-        this.groupId = groupId;
-        this.adminId = adminId;
-        this.adminName = adminName;
-        this.adminDeviceToken = adminDeviceToken;
-        this.groupName = groupName;
-        this.lastMsg = lastMsg;
-        this.groupPhoto = groupPhoto;
-        this.timeStamp = timeStamp;
-        this.groupUsers = groupUsers;
-    }
 
     public GroupChat() {}
 
@@ -59,6 +48,10 @@ public class GroupChat implements Serializable {
 
     public long getTimeStamp() {
         return timeStamp;
+    }
+
+    public long getAllowedDistanceFromAdmin() {
+        return allowedDistanceFromAdmin;
     }
 
     public Map<String, Object> getGroupUsers() {

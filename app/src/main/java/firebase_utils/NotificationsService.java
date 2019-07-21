@@ -10,12 +10,16 @@ import com.google.firebase.messaging.RemoteMessage;
 import utils.SoundFxManager;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
+import static activities.MainActivity.sDatabaseManager;
 
 public class NotificationsService extends FirebaseMessagingService {
 
+    //region Constants
     private static final String MSG_NOTIFICATION_DATA = "message";
     private static final String GROUP_REQUEST_NOTIFICATION_DATA = "group_request";
+    //endregion
 
+    //region Overrides
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
@@ -54,6 +58,9 @@ public class NotificationsService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String s) {
         super.onNewToken(s);
-        sCurrentFirebaseUser.setDeviceToken(s);
+        if(sDatabaseManager != null) {
+            sCurrentFirebaseUser.setDeviceToken(s);
+        }
     }
+    //endregion
 }

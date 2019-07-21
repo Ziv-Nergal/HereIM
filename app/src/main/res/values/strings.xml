@@ -41,7 +41,7 @@
     <string name="delete_group_dialog_msg">Are you sure you want to delete group?</string>
     <string name="group_id">Group\'s Id:</string>
     <string name="only_admin_can_see_this">Only the admin can see this</string>
-    <string name="search_groups_instructions">Enter the group\'s id that you want to join to</string>
+    <string name="search_groups_instructions">Enter the group\'s id that you want to join to,  \n you can also search by the group\'s name</string>
     <string name="request_to_join_group">Ask admin to join group</string>
     <string name="group_not_found">Group not found!</string>
     <string name="create_group">Create Group</string>
@@ -150,5 +150,7 @@
     <string name="permissions">This app needs to access your device location</string>
     <string name="permissions_denied">We need your permissions to access the map...</string>
     <string name="no_location_msg">Something went wrong, please check your internet connection and location service and try again</string>
+    <string name="distance_from_admin">Maximum distance between users and you</string>
+    <string name="location">Location</string>
 
 </resources>

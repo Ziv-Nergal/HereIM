@@ -1,4 +1,4 @@
-package utils;
+package location_utils;
 
 import android.content.Context;
 import android.location.Address;
@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.util.Log;
 
 import java.io.IOException;
+
+import fragments.MapsFragment;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
 
@@ -30,26 +32,25 @@ public class LocationListener implements android.location.LocationListener {
         mContext = context;
     }
 
-    String getProvider() {
-        return mProvider;
-    }
-
     //region Overrides
     @Override
     public void onLocationChanged(Location location) {
 
-        mLastLocation.set(location);
+        if(sCurrentFirebaseUser == null || !sCurrentFirebaseUser.isSharingLocation()) return;
 
-        Geocoder geocoder = new Geocoder(mContext);
+        String address = null;
+        mLastLocation.set(location);
+        MapsFragment.mCurrentLocation = location;
 
         try {
-            Address address = geocoder.getFromLocation(location.getLatitude(),
-                    location.getLongitude(), 1).get(0);
-
-            sCurrentFirebaseUser.updateMyLocation(location, address.getAddressLine(0));
+            Geocoder geocoder = new Geocoder(mContext);
+            address = geocoder.getFromLocation(location.getLatitude(),
+                    location.getLongitude(), 1).get(0).getAddressLine(0);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        sCurrentFirebaseUser.updateMyLocation(location, address);
 
         Log.e(TAG, "onLocationChanged: " + location);
     }
@@ -66,6 +67,12 @@ public class LocationListener implements android.location.LocationListener {
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         Log.e(TAG, "onStatusChanged: " + provider);
+    }
+    //endregion
+
+    //region Methods
+    String getProvider() {
+        return mProvider;
     }
     //endregion
 }

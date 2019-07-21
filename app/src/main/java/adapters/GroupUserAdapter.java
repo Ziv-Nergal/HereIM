@@ -26,6 +26,7 @@ import java.util.Objects;
 import database_classes.GroupChat;
 import de.hdodenhof.circleimageview.CircleImageView;
 import database_classes.GroupUser;
+import firebase_utils.DatabaseManager;
 import gis.hereim.R;
 
 import static activities.MainActivity.sCurrentFirebaseUser;
@@ -205,7 +206,19 @@ public class GroupUserAdapter extends FirebaseRecyclerAdapter<GroupUser, BaseVie
 
             mUserName.setText(groupUser.getFullName());
 
-            if(groupUser.isOnline()){
+            sDatabaseManager.fetchUserLocationSharingStatus(groupUser.getUid(),
+                    new DatabaseManager.FetchLocationSharingStatusCallback() {
+                @Override
+                public void onStatusFetched(boolean status) {
+                    if(status){
+                        mUserPhoto.setBorderColor(Color.GREEN);
+                    } else {
+                        mUserPhoto.setBorderColor(Color.RED);
+                    }
+                }
+            });
+
+            if(groupUser.getIsSharingLocation()){
                 mUserPhoto.setBorderColor(Color.GREEN);
             } else {
                 mUserPhoto.setBorderColor(Color.RED);

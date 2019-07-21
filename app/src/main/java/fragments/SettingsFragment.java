@@ -4,6 +4,9 @@ import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
+import android.widget.Switch;
+
 import androidx.annotation.Nullable;
 
 import gis.hereim.R;
@@ -17,10 +20,20 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
 
-        EditTextPreference emailPreference = (EditTextPreference) getPreferenceManager().findPreference("pref_info_email");
-        EditTextPreference fullNamePreference = (EditTextPreference) getPreferenceManager().findPreference("pref_info_full_name");
-        EditTextPreference statusPreference = (EditTextPreference) getPreferenceManager().findPreference("pref_info_status");
-        
+        EditTextPreference emailPreference = (EditTextPreference) getPreferenceManager()
+                .findPreference("pref_info_email");
+        EditTextPreference fullNamePreference = (EditTextPreference) getPreferenceManager()
+                .findPreference("pref_info_full_name");
+        EditTextPreference statusPreference = (EditTextPreference) getPreferenceManager()
+                .findPreference("pref_info_status");
+
+        SwitchPreference locationPregerence = (SwitchPreference) getPreferenceManager()
+                .findPreference("pref_location");
+
+        if(locationPregerence != null) {
+            locationPregerence.setOnPreferenceChangeListener(this);
+        }
+
         if (emailPreference != null) {
             emailPreference.setSummary(sCurrentFirebaseUser.getEmailAddress());
         }
@@ -47,6 +60,10 @@ public class SettingsFragment extends PreferenceFragment implements Preference.O
                 break;
             case "pref_info_status":
                 changeStatus(newValue);
+                break;
+            case "pref_location":
+                ((SwitchPreference)preference).setChecked((boolean) newValue);
+                sCurrentFirebaseUser.setSharingLocation((boolean) newValue);
                 break;
         }
 

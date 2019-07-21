@@ -4,7 +4,10 @@ import android.content.Context;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
+import android.preference.PreferenceManager;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -23,19 +26,22 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import javax.security.auth.callback.Callback;
+
 import database_classes.GroupUser;
+import database_classes.UserLocation;
 import utils.ColorParser;
+import utils.SoundFxManager;
 
 import static firebase_utils.DatabaseManager.NOTIFICATIONS_DB_REF_NAME;
 
 public class CurrentFirebaseUser {
 
+    //region Class Members
     private static CurrentFirebaseUser sInstance = null;
 
     private FirebaseUser mFirebaseUser;
-
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-
     private DatabaseReference mCurrentUserDbRef;
     private DatabaseReference mCurrentUserGroupsDbRef;
     private DatabaseReference mMessageNotificationsDbRef;
@@ -50,7 +56,10 @@ public class CurrentFirebaseUser {
     private String mUserPhotoUrl;
 
     private boolean mIsOnline;
+    private boolean mIsSharingLocation;
+    //endregion
 
+    //region Methods
     private CurrentFirebaseUser() {
         initUser();
     }
@@ -73,10 +82,21 @@ public class CurrentFirebaseUser {
 
             mUid = mFirebaseUser.getUid();
 
-            mCurrentUserDbRef = FirebaseDatabase.getInstance().getReference().child("Users").child(mUid);
+            mCurrentUserDbRef = FirebaseDatabase
+                    .getInstance()
+                    .getReference()
+                    .child("Users")
+                    .child(mUid);
+
             mCurrentUserGroupsDbRef = mCurrentUserDbRef.child("groups");
-            mMessageNotificationsDbRef = mCurrentUserDbRef.child(NOTIFICATIONS_DB_REF_NAME).child("messages");
-            mGroupRequestsDbRef = mCurrentUserDbRef.child(NOTIFICATIONS_DB_REF_NAME).child("groupRequests");
+
+            mMessageNotificationsDbRef = mCurrentUserDbRef
+                    .child(NOTIFICATIONS_DB_REF_NAME)
+                    .child("messages");
+
+            mGroupRequestsDbRef = mCurrentUserDbRef
+                    .child(NOTIFICATIONS_DB_REF_NAME)
+                    .child("groupRequests");
 
             mFullName = mFirebaseUser.getDisplayName();
             mEmailAddress = mFirebaseUser.getEmail();
@@ -86,6 +106,7 @@ public class CurrentFirebaseUser {
             fetchUserPhoto();
             fetchUserStatus();
             updateDeviceToken();
+            fetchSharingLocationStatus();
         }
     }
 
@@ -133,7 +154,7 @@ public class CurrentFirebaseUser {
 
     GroupUser getFirebaseClassInstance(){
         return new GroupUser(mUid, mDeviceToken, mEmailAddress, mFullName,
-                mIsOnline, mUserPhotoUrl, mUserStatus);
+                mIsOnline, mUserPhotoUrl, mUserStatus, mIsSharingLocation);
     }
 
     public void setFullName(String fullName) {
@@ -158,8 +179,27 @@ public class CurrentFirebaseUser {
         mCurrentUserDbRef.child("online").setValue(iIsOnline);
     }
 
+    private void fetchSharingLocationStatus() {
+        mCurrentUserDbRef.child("isSharingLocation")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()) {
+                    boolean isSharing = (boolean)dataSnapshot.getValue();
+                    setSharingLocation(isSharing);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void fetchUserPhoto() {
-        mCurrentUserDbRef.child("photoUri").addListenerForSingleValueEvent(new ValueEventListener() {
+        mCurrentUserDbRef.child("photoUri")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mUserPhotoUrl = dataSnapshot.getValue(String.class);
@@ -170,7 +210,8 @@ public class CurrentFirebaseUser {
     }
 
     private void fetchUserStatus() {
-        mCurrentUserDbRef.child("status").addListenerForSingleValueEvent(new ValueEventListener() {
+        mCurrentUserDbRef.child("status")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mUserStatus = dataSnapshot.getValue(String.class);
@@ -182,7 +223,8 @@ public class CurrentFirebaseUser {
     }
 
     public void updatePhoto(Uri userPhotoUri) {
-        mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder().setPhotoUri(userPhotoUri).build());
+        mFirebaseUser.updateProfile(new UserProfileChangeRequest.Builder()
+                .setPhotoUri(userPhotoUri).build());
 
         final StorageReference imageStorageRef = FirebaseStorage
                 .getInstance()
@@ -206,10 +248,15 @@ public class CurrentFirebaseUser {
         });
     }
 
-    public void updateMyLocation(Location location, String addressLine) {
+    public void updateMyLocation(Location location, @Nullable String addressLine) {
         mCurrentUserDbRef.child("location").child("lat").setValue(location.getLatitude());
         mCurrentUserDbRef.child("location").child("lng").setValue(location.getLongitude());
-        mCurrentUserDbRef.child("location").child("address").setValue(addressLine);
+
+        if (addressLine != null) {
+            mCurrentUserDbRef.child("location").child("address").setValue(addressLine);
+        } else {
+            mCurrentUserDbRef.child("location").child("address").setValue("unknown");
+        }
     }
 
     private void updateDeviceToken() {
@@ -227,9 +274,19 @@ public class CurrentFirebaseUser {
         return mFirebaseUser != null;
     }
 
+    public void setSharingLocation(boolean isSharing) {
+        mCurrentUserDbRef.child("isSharingLocation").setValue(isSharing);
+        mIsSharingLocation = isSharing;
+    }
+
+    public boolean isSharingLocation() {
+        return mIsSharingLocation;
+    }
+
     public void logout(){
         setIsOnline(false);
         sInstance = null;
         mAuth.signOut();
     }
+    //endregion
 }

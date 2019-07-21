@@ -63,7 +63,8 @@ public class SignUpActivity extends AppCompatActivity {
         String confirmPassword = mConfirmPassET.getText().toString().trim();
 
         try{
-            AuthManager.ValidateInputsNotEmpty(new EditText[]{mFullNameET, mEmailET, mPasswordET, mConfirmPassET});
+            AuthManager.ValidateInputsNotEmpty(new EditText[]{mFullNameET, mEmailET,
+                    mPasswordET, mConfirmPassET});
             validateMatchingPasswords(password, confirmPassword);
             createNewUser(email, fullName, password);
         }catch (Exception ex){
@@ -100,7 +101,8 @@ public class SignUpActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        Toast.makeText(SignUpActivity.this, AuthManager.GetErrorMessage(e), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SignUpActivity.this,
+                                AuthManager.GetErrorMessage(e), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -109,9 +111,11 @@ public class SignUpActivity extends AppCompatActivity {
 
         if(mAuth.getCurrentUser() != null){
 
-            mAuth.getCurrentUser().updateProfile(new UserProfileChangeRequest.Builder().setDisplayName(fullName).setPhotoUri(DEFAULT_PHOTO_URI).build());
+            mAuth.getCurrentUser().updateProfile(new UserProfileChangeRequest.Builder()
+                    .setDisplayName(fullName).setPhotoUri(DEFAULT_PHOTO_URI).build());
 
-            final DatabaseReference currentUserRef =  FirebaseDatabase.getInstance().getReference().child("Users").child(mAuth.getCurrentUser().getUid());
+            final DatabaseReference currentUserRef =  FirebaseDatabase.getInstance().getReference()
+                    .child("Users").child(mAuth.getCurrentUser().getUid());
 
             Map<String, Object> userDetailsList = new HashMap<>();
             userDetailsList.put("uid", mAuth.getCurrentUser().getUid());
@@ -119,7 +123,10 @@ public class SignUpActivity extends AppCompatActivity {
             userDetailsList.put("email", email);
             userDetailsList.put("photoUri", DEFAULT_PHOTO_URI.toString());
             userDetailsList.put("status", getString(R.string.default_status));
-            userDetailsList.put("deviceToken", Objects.requireNonNull(FirebaseInstanceId.getInstance().getToken()));
+            userDetailsList.put("isSharingLocation", true);
+            userDetailsList.put("deviceToken",
+                    Objects.requireNonNull(FirebaseInstanceId.getInstance().getToken()));
+
 
             currentUserRef.updateChildren(userDetailsList).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override

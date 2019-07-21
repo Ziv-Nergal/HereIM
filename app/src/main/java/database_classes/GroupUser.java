@@ -13,12 +13,15 @@ public class GroupUser {
     private String photoUri;
     private String status;
     private UserLocation location;
+    private boolean isSharingLocation;
 
     private boolean online;
 
     public GroupUser() {}
 
-    public GroupUser(String uid, String deviceToken, String email, String fullName, boolean online, String photoUri, String status) {
+    public GroupUser(String uid, String deviceToken, String email, String fullName,
+                     boolean online, String photoUri, String status,
+                     boolean isSharingLocation) {
         this.uid = uid;
         this.deviceToken = deviceToken;
         this.email = email;
@@ -26,6 +29,7 @@ public class GroupUser {
         this.online = online;
         this.photoUri = photoUri;
         this.status = status;
+        this.isSharingLocation = isSharingLocation;
     }
 
     public String getUid() {
@@ -60,31 +64,5 @@ public class GroupUser {
         return location;
     }
 
-    public void setUid(String uid) {
-        this.uid = uid;
-    }
-
-    public void setDeviceToken(String deviceToken) {
-        this.deviceToken = deviceToken;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
-    }
-
-    public void setPhotoUri(String photoUri) {
-        this.photoUri = photoUri;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public boolean getIsSharingLocation() { return isSharingLocation; }
 }

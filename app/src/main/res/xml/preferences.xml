@@ -61,4 +61,14 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/location">
+
+        <SwitchPreference
+            android:title="Share may location"
+            android:key="pref_location"
+            android:icon="@drawable/ic_location"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

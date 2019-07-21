@@ -1,4 +1,4 @@
-package utils;
+package location_utils;
 
 import android.app.Service;
 import android.content.Context;
@@ -26,12 +26,16 @@ public class LocationUpdateService extends Service {
         return null;
     }
 
+    //______________________________________________________________________________________________
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         return START_STICKY;
     }
+
+    //______________________________________________________________________________________________
 
     @Override
     public void onCreate() {
@@ -49,19 +53,21 @@ public class LocationUpdateService extends Service {
         }
     }
 
+    //______________________________________________________________________________________________
+
     @Override
     public void onDestroy() {
-        Log.e(TAG, "onDestroy");
         super.onDestroy();
-        if (mLocationManager != null) {
-            for (LocationListener mLocationListener : mLocationListeners) {
-                try {
-                    mLocationManager.removeUpdates(mLocationListener);
-                } catch (Exception ex) {
-                    Log.i(TAG, "fail to remove location listners, ignore", ex);
-                }
-            }
-        }
+        Log.e(TAG, "onDestroy");
+//        if (mLocationManager != null) {
+//            for (LocationListener mLocationListener : mLocationListeners) {
+//                try {
+//                    mLocationManager.removeUpdates(mLocationListener);
+//                } catch (Exception ex) {
+//                    Log.i(TAG, "fail to remove location listeners, ignore", ex);
+//                }
+//            }
+//        }
     }
     //endregion
 
@@ -69,13 +75,15 @@ public class LocationUpdateService extends Service {
     private void requestLocationUpdates(String provider, LocationListener listener) {
         try {
             mLocationManager.requestLocationUpdates(
-                    provider, LOCATION_INTERVAL, LOCATION_DISTANCE,listener);
+                    provider, LOCATION_INTERVAL, LOCATION_DISTANCE, listener);
         } catch (SecurityException ex) {
             Log.i(TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {
             Log.d(TAG, provider + "not available" + ex.getMessage());
         }
     }
+
+    //______________________________________________________________________________________________
 
     private void initializeLocationManager() {
         Log.e(TAG, "initializeLocationManager");
